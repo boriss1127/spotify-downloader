@@ -7,7 +7,42 @@ const fs = require('fs');
 const { shell } = require('electron');
 const fetch = require('node-fetch');
 const archiver = require('archiver');
-require('dotenv').config();
+
+// Debug logging for .env loading
+console.log('Current directory:', __dirname);
+console.log('App path:', app.getAppPath());
+console.log('App name:', app.getName());
+
+// Try multiple possible locations for .env
+const possibleEnvPaths = [
+    path.join(app.getAppPath(), '.env'),                    // App root
+    path.join(app.getAppPath(), '..', '.env'),             // One level up
+    path.join(app.getAppPath(), '..', '..', '.env'),       // Two levels up
+    path.join(process.cwd(), '.env')                        // Current working directory
+];
+
+console.log('Searching for .env in:', possibleEnvPaths);
+
+let envPath = null;
+for (const p of possibleEnvPaths) {
+    if (fs.existsSync(p)) {
+        envPath = p;
+        console.log('Found .env at:', p);
+        break;
+    }
+}
+
+if (!envPath) {
+    console.error('Could not find .env file in any of the expected locations');
+} else {
+    require('dotenv').config({ path: envPath });
+}
+
+// Debug logging for environment variables
+console.log('Environment variables loaded:', {
+    SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID ? 'Set' : 'Not set',
+    SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET ? 'Set' : 'Not set'
+});
 
 remoteMain.initialize();
 
@@ -338,10 +373,31 @@ async function createZipFile(sourceDir, zipPath) {
     });
 }
 
-// Improved download handler with playlist folder and zip support
-ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', format = 'mp3', isPlaylist = false) => {
+// Add handler for creating playlist folder
+ipcMain.handle('create-playlist-folder', async (event, folderName) => {
     try {
-        console.log('Download request received:', { url, title, artist, format, isPlaylist });
+        console.log('Creating playlist folder:', folderName);
+        const folderPath = path.join(downloadsDir, folderName);
+        
+        // Create the folder if it doesn't exist
+        if (!fs.existsSync(folderPath)) {
+            fs.mkdirSync(folderPath, { recursive: true });
+            console.log('Playlist folder created:', folderPath);
+        } else {
+            console.log('Playlist folder already exists:', folderPath);
+        }
+        
+        return { success: true, folderPath };
+    } catch (error) {
+        console.error('Error creating playlist folder:', error);
+        throw new Error(`Failed to create playlist folder: ${error.message}`);
+    }
+});
+
+// Improved download handler with playlist folder and zip support
+ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', format = 'mp3', isPlaylist = false, playlistFolder = null) => {
+    try {
+        console.log('Download request received:', { url, title, artist, format, isPlaylist, playlistFolder });
         
         if (!url || !title) {
             throw new Error('Missing required parameters for download');
@@ -349,25 +405,15 @@ ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', fo
 
         // For single tracks, download directly to downloads folder
         let downloadDir = downloadsDir;
-        let zipPath = null;
         
-        if (isPlaylist) {
-            // Create a sanitized folder name for the playlist/album
-            const sanitizedFolderName = title
-                .replace(/[<>:"/\\|?*]/g, '')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .substring(0, 100);
+        if (isPlaylist && playlistFolder) {
+            // Use the already created playlist folder
+            downloadDir = path.join(downloadsDir, playlistFolder);
             
-            downloadDir = path.join(downloadsDir, sanitizedFolderName);
-            
-            // Create the folder if it doesn't exist
+            // Verify the folder exists
             if (!fs.existsSync(downloadDir)) {
-                fs.mkdirSync(downloadDir, { recursive: true });
+                throw new Error('Playlist folder not found');
             }
-            
-            // Set zip path
-            zipPath = path.join(downloadsDir, `${sanitizedFolderName}.zip`);
         }
 
         // Clean the filename
@@ -389,9 +435,7 @@ ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', fo
         return { 
             success: true, 
             path: outputPath,
-            zipPath: isPlaylist ? zipPath : null,
-            isPlaylist: isPlaylist,
-            folderPath: isPlaylist ? downloadDir : null
+            isPlaylist: isPlaylist
         };
         
     } catch (error) {
@@ -401,14 +445,27 @@ ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', fo
 });
 
 // Add new handler for creating zip after all downloads
-ipcMain.handle('create-playlist-zip', async (event, folderPath, zipPath) => {
+ipcMain.handle('create-playlist-zip', async (event, folderName, zipName) => {
     try {
         console.log('Creating zip file for playlist...');
+        const folderPath = path.join(downloadsDir, folderName);
+        const zipPath = path.join(downloadsDir, zipName);
+        
         console.log('Folder path:', folderPath);
         console.log('Zip path:', zipPath);
 
         await createZipFile(folderPath, zipPath);
         console.log('Zip file created successfully');
+
+        // Delete the original folder after successful zip creation
+        try {
+            fs.rmSync(folderPath, { recursive: true, force: true });
+            console.log('Original folder deleted successfully');
+        } catch (deleteError) {
+            console.error('Error deleting original folder:', deleteError);
+            // Don't throw here, as the zip was created successfully
+        }
+
         return { success: true, zipPath };
     } catch (error) {
         console.error('Error creating zip:', error);

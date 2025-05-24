@@ -180,11 +180,26 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Fetching tracks for playlist/album...');
             const allTracks = await preloadGetTracks(url);
             console.log('All tracks received:', allTracks);
-            // Preserve the original order of tracks
+            
+            // Create playlist folder name from the playlist/album name
+            const sanitizedFolderName = data.name
+                .replace(/[<>:"/\\|?*]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .substring(0, 100);
+
+            // Set the playlist folder and zip path
+            playlistFolder = sanitizedFolderName;
+            zipPath = `${sanitizedFolderName}.zip`;
+
+            // Create the playlist folder immediately
+            await window.electronAPI.createPlaylistFolder(playlistFolder);
+            
+            // Map tracks with their original order
             tracks = allTracks.map((t, index) => ({ 
                 name: t.name, 
                 artist: t.artists[0].name,
-                originalIndex: index // Keep track of original position
+                originalIndex: index
             }));
         } else if (data.type === 'track') {
             tracks = [{ name: data.name, artist: data.artists[0].name, originalIndex: 0 }];
@@ -228,15 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const videoUrl = video.url.startsWith('http') ? video.url : `https://www.youtube.com/watch?v=${video.videoId}`;
                 console.log('Formatted video URL:', videoUrl);
                 
-                const result = await ytdlDownload(videoUrl, track.name, track.artist, format, isPlaylist);
+                const result = await ytdlDownload(videoUrl, track.name, track.artist, format, isPlaylist, playlistFolder);
                 console.log('Download completed for:', track.name);
                 successCount++;
-                
-                // Store playlist folder and zip path from first successful download
-                if (isPlaylist && result.isPlaylist && !playlistFolder) {
-                    playlistFolder = result.folderPath;
-                    zipPath = result.zipPath;
-                }
 
                 // Add a small delay between downloads to prevent race conditions
                 if (i < tracks.length - 1) {

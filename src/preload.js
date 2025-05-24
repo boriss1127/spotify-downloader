@@ -25,17 +25,21 @@ contextBridge.exposeInMainWorld(
             console.log('Preload: Sending getTracks event');
             return ipcRenderer.invoke('get-tracks', url);
         },
-        ytdlDownload: (url, title, artist, format, isPlaylist) => {
+        ytdlDownload: (url, title, artist, format, isPlaylist, playlistFolder) => {
             console.log('Preload: Sending ytdlDownload event with format:', format);
-            return ipcRenderer.invoke('ytdl-download', url, title, artist, format, isPlaylist);
+            return ipcRenderer.invoke('ytdl-download', url, title, artist, format, isPlaylist, playlistFolder);
         },
         ytSearch: (query) => {
             console.log('Preload: Sending ytSearch event');
             return ipcRenderer.invoke('yt-search', query);
         },
-        createPlaylistZip: (folderPath, zipPath) => {
+        createPlaylistFolder: (folderName) => {
+            console.log('Preload: Sending createPlaylistFolder event');
+            return ipcRenderer.invoke('create-playlist-folder', folderName);
+        },
+        createPlaylistZip: (folderName, zipName) => {
             console.log('Preload: Sending createPlaylistZip event');
-            return ipcRenderer.invoke('create-playlist-zip', folderPath, zipPath);
+            return ipcRenderer.invoke('create-playlist-zip', folderName, zipName);
         },
         openFolder: () => {
             console.log('Preload: Sending openFolder event');
