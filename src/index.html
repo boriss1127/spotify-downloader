@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Downloader</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="glow"></div>
+
+    
+    <div class="title-bar">
+        <div class="title">Spotify Downloader</div>
+        <div class="window-controls">
+            <button id="min-btn"><img src="../img-src/title-bar/minus.png" alt="-" width="20" height="20"></button>
+            <button id="max-btn"><img src="../img-src/title-bar/sqr.png" alt="sqr" width="15" height="15"></button>
+            <button id="close-btn"><img src="../img-src/title-bar/cross.png" alt="x" width="20" height="20"></button>
+        </div>
+    </div>
+    <div class="container">
+        <h1>Spotify Downloader</h1>
+        <div class="input-container">
+            <input type="text" id="spotifyLink" placeholder="Enter Spotify link (track, playlist, or album)">
+            <button id="downloadBtn">Download</button>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <p id="status">Ready to download</p>
+        </div>
+        <button id="openFolderBtn" class="open-folder-btn">Open Downloads Folder</button>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
