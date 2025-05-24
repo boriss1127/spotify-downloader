@@ -88,6 +88,7 @@ async function downloadYouTubeVideo(url, outputPath) {
         console.log('Processing URL:', videoUrl);
         
         // Get video info
+        console.log('Fetching video info...');
         const videoInfo = await play.video_info(videoUrl);
         if (!videoInfo) {
             throw new Error('Could not get video information');
@@ -100,20 +101,24 @@ async function downloadYouTubeVideo(url, outputPath) {
         });
 
         // Get the best audio stream
+        console.log('Getting audio stream...');
         const stream = await play.stream(videoUrl, {
             quality: 140, // 140 is the highest audio quality
             discordPlayerCompatibility: false
         });
 
-        if (!stream) {
+        if (!stream || !stream.stream) {
             throw new Error('Could not get audio stream');
         }
 
+        console.log('Stream obtained, creating write stream...');
         const writeStream = fs.createWriteStream(outputPath);
         
         return new Promise((resolve, reject) => {
             let downloadedBytes = 0;
             const totalBytes = stream.stream?.info?.size || 0;
+
+            console.log('Setting up stream handlers...');
 
             // Handle stream errors
             stream.stream.on('error', (error) => {
@@ -130,6 +135,7 @@ async function downloadYouTubeVideo(url, outputPath) {
 
             // Handle successful completion
             writeStream.on('finish', () => {
+                console.log('Write stream finished');
                 console.log('Download completed successfully');
                 console.log(`Total downloaded: ${(downloadedBytes / 1024 / 1024).toFixed(2)} MB`);
                 resolve();
@@ -144,12 +150,19 @@ async function downloadYouTubeVideo(url, outputPath) {
 
             // Handle stream end
             stream.stream.on('end', () => {
-                console.log('Stream ended, waiting for write to complete...');
+                console.log('Read stream ended');
             });
 
+            // Handle write stream close
+            writeStream.on('close', () => {
+                console.log('Write stream closed');
+            });
+
+            console.log('Starting pipe operation...');
             // Pipe the stream and handle errors
             try {
                 stream.stream.pipe(writeStream);
+                console.log('Pipe operation started successfully');
             } catch (error) {
                 console.error('Error during pipe operation:', error);
                 reject(error);
