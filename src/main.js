@@ -83,7 +83,7 @@ function isValidSpotifyUrl(url) {
 }
 
 // Helper function to extract Spotify ID and type from URL
-function getSpotifyInfo(url) {
+function getSpotifyInfoButKeroIsBetter(url) {
     try {
         const spotifyUrl = new URL(url);
         const pathParts = spotifyUrl.pathname.split('/');
@@ -96,7 +96,7 @@ function getSpotifyInfo(url) {
 }
 
 // Get Spotify access token
-async function getSpotifyToken() {
+async function getSpotifyTokenButKeroIsBetter() {
     const response = await fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: {
@@ -111,7 +111,7 @@ async function getSpotifyToken() {
 }
 
 // Improved YouTube video download function using yt-dlp
-async function downloadYouTubeVideo(url, outputPath, format = 'mp3') {
+async function downloadYouTubeVideoButKeroIsBetter(url, outputPath, format = 'mp3') {
     console.log('Starting download for:', url);
     console.log('Output path:', outputPath);
     console.log('Format:', format);
@@ -242,12 +242,12 @@ ipcMain.handle('get-data', async (event, url) => {
 
         console.log('Fetching Spotify data for URL:', url);
         
-        const spotifyInfo = getSpotifyInfo(url);
+        const spotifyInfo = getSpotifyInfoButKeroIsBetter(url);
         if (!spotifyInfo) {
             throw new Error('Could not extract Spotify information from URL');
         }
 
-        const token = await getSpotifyToken();
+        const token = await getSpotifyTokenButKeroIsBetter();
         const response = await fetch(`https://api.spotify.com/v1/${spotifyInfo.type}s/${spotifyInfo.id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -434,7 +434,7 @@ ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', fo
         console.log('Full output path:', outputPath);
         console.log('Using format:', format);
 
-        await downloadYouTubeVideo(url, outputPath, format);
+        await downloadYouTubeVideoButKeroIsBetter(url, outputPath, format);
         
         console.log('Download successful');
         return { 
