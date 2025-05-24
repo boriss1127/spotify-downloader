@@ -2,8 +2,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 console.log('Preload script running');
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld(
     'electronAPI',
     {
@@ -27,13 +25,17 @@ contextBridge.exposeInMainWorld(
             console.log('Preload: Sending getTracks event');
             return ipcRenderer.invoke('get-tracks', url);
         },
-        ytdlDownload: (url, title, artist) => {
-            console.log('Preload: Sending ytdlDownload event');
-            return ipcRenderer.invoke('ytdl-download', url, title, artist);
+        ytdlDownload: (url, title, artist, format, isPlaylist) => {
+            console.log('Preload: Sending ytdlDownload event with format:', format);
+            return ipcRenderer.invoke('ytdl-download', url, title, artist, format, isPlaylist);
         },
         ytSearch: (query) => {
             console.log('Preload: Sending ytSearch event');
             return ipcRenderer.invoke('yt-search', query);
+        },
+        createPlaylistZip: (folderPath, zipPath) => {
+            console.log('Preload: Sending createPlaylistZip event');
+            return ipcRenderer.invoke('create-playlist-zip', folderPath, zipPath);
         },
         openFolder: () => {
             console.log('Preload: Sending openFolder event');

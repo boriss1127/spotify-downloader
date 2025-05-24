@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.2",
+    "archiver": "^7.0.1",
     "dotenv": "^16.5.0",
     "electron": "^28.3.3",
     "fluent-ffmpeg": "^2.1.3",

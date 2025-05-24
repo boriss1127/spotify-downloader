@@ -1,8 +1,6 @@
-// Remove direct Node.js requires since we're using preload API
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded');
 
-  // Check if electronAPI is available
   if (!window.electronAPI) {
       console.error('electronAPI not available - preload script may not be working');
       return;
@@ -20,123 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('close-btn');
   const formatToggle = document.getElementById('formatToggle');
 
-  console.log('Buttons found:', {
-      downloadBtn: !!downloadBtn,
-      openFolderBtn: !!openFolderBtn,
-      minBtn: !!minBtn,
-      maxBtn: !!maxBtn,
-      closeBtn: !!closeBtn,
-      formatToggle: !!formatToggle
-  });
-
-  // Helper exposed by preload.js for IPC calls and fs-safe ops
   const { 
     getData: preloadGetData, 
     getTracks: preloadGetTracks, 
     ytdlDownload, 
     ytSearch: preloadYtSearch, 
-    openFolder, 
-    windowControls 
+    openFolder
   } = window.electronAPI;
 
   if (downloadBtn) {
     downloadBtn.onclick = async () => {
-      const input = spotifyLink.value.trim();
-      console.log('Download button clicked with input:', input);
-      
-      if (!input) {
-        status.textContent = 'Please enter a Spotify link';
-        return;
-      }
-      if (!isSpotifyUrl(input)) {
-        status.textContent = 'Please enter a valid Spotify link';
-        return;
-      }
-
-      try {
-        downloadBtn.disabled = true;
-        status.textContent = 'Fetching Spotify data...';
-        progress.style.width = '10%';
-
-        console.log('Calling preloadGetData...');
-        const data = await preloadGetData(input);
-        console.log('Spotify data received:', data);
-        
-        let tracks = [];
-
-        if (data.type === 'playlist' || data.type === 'album') {
-          console.log('Fetching tracks for playlist/album...');
-          const allTracks = await preloadGetTracks(input);
-          console.log('All tracks received:', allTracks);
-          tracks = allTracks.map(t => ({ name: t.name, artist: t.artists[0].name }));
-        } else if (data.type === 'track') {
-          tracks = [{ name: data.name, artist: data.artists[0].name }];
-        } else {
-          throw new Error('Unsupported Spotify link');
-        }
-
-        console.log('Tracks to download:', tracks);
-        let successCount = 0;
-
-        for (let i = 0; i < tracks.length; i++) {
-          const track = tracks[i];
-          console.log(`Processing track ${i + 1}/${tracks.length}:`, track);
-          
-          status.textContent = `Searching YouTube for: ${track.name} by ${track.artist}`;
-          progress.style.width = `${((i + 1) / tracks.length) * 100}%`;
-
-          const searchQuery = `${track.name} ${track.artist} official music video`;
-          console.log('YouTube search query:', searchQuery);
-          
-          const results = await preloadYtSearch(searchQuery);
-          console.log('YouTube search results:', results);
-          
-          const video = results.videos[0];
-          console.log('Selected video:', video);
-
-          if (!video) {
-            console.log(`No video found for: ${track.name}`);
-            status.textContent = `Could not find video for: ${track.name}`;
-            continue;
-          }
-
-          try {
-            console.log('Starting download for:', video.url);
-            status.textContent = `Downloading: ${track.name}`;
-            
-            // Ensure URL is properly formatted
-            const videoUrl = video.url.startsWith('http') ? video.url : `https://www.youtube.com/watch?v=${video.videoId}`;
-            console.log('Formatted video URL:', videoUrl);
-            
-            // Get the current format from the toggle
-            const format = formatToggle.checked ? 'mp4' : 'mp3';
-            console.log('Download format:', format);
-            
-            await ytdlDownload(videoUrl, track.name, track.artist, format);
-            console.log('Download completed for:', track.name);
-            successCount++;
-          } catch (error) {
-            console.error(`Download error for ${track.name}:`, error);
-            status.textContent = `Error downloading: ${track.name} - ${error.message}`;
-            // Continue with next track instead of stopping
-            continue;
-          }
-        }
-
-        if (successCount > 0) {
-          status.textContent = `Download complete! (${successCount}/${tracks.length} videos)`;
-        } else {
-          status.textContent = 'No videos were downloaded successfully';
-        }
-      } catch (error) {
-        console.error('Main download error:', error);
-        status.textContent = `Error: ${error.message}`;
-      } finally {
-        downloadBtn.disabled = false;
-        setTimeout(() => {
-          progress.style.width = '0%';
-        }, 1000);
-      }
+      await download();
     };
   }
 
@@ -163,25 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (minBtn) {
-      console.log('Setting up minimize button handler');
       minBtn.addEventListener('click', () => {
-          console.log('Minimize button clicked');
           window.electronAPI.minimize();
       });
   }
 
   if (maxBtn) {
-      console.log('Setting up maximize button handler');
       maxBtn.addEventListener('click', () => {
-          console.log('Maximize button clicked');
           window.electronAPI.maximize();
       });
   }
 
   if (closeBtn) {
-      console.log('Setting up close button handler');
       closeBtn.addEventListener('click', () => {
-          console.log('Close button clicked');
           window.electronAPI.close();
       });
   }
@@ -190,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
     formatToggle.addEventListener('change', (e) => {
       const format = e.target.checked ? 'MP4' : 'MP3';
       console.log(`Format changed to: ${format}`);
-      console.log(`Toggle state: ${e.target.checked}`);
     });
   }
 
@@ -249,14 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
       status.textContent = `Downloading ${title}...`;
       progress.style.width = '50%';
 
-      console.log('Downloading single video:', { videoId, title });
+      const format = formatToggle.checked ? 'mp4' : 'mp3';
+      console.log('Downloading single video:', { videoId, title, format });
 
-      // Fixed: Added artist parameter
-      await ytdlDownload(`https://www.youtube.com/watch?v=${videoId}`, title, 'Unknown Artist');
+      await ytdlDownload(`https://www.youtube.com/watch?v=${videoId}`, title, 'Unknown Artist', format);
 
       status.textContent = 'Download complete!';
       progress.style.width = '100%';
-      console.log('Single video download completed');
     } catch (error) {
       console.error('Single video download error:', error);
       status.textContent = `Error: ${error.message}`;
@@ -268,11 +152,135 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function download() {
+    const url = document.getElementById('spotifyLink').value;
+    if (!url) {
+        console.log('No URL provided');
+        return;
+    }
+
+    const format = formatToggle.checked ? 'mp4' : 'mp3';
+    console.log(`Starting download in ${format.toUpperCase()} format`);
+    
+    try {
+        downloadBtn.disabled = true;
+        status.textContent = 'Fetching Spotify data...';
+        progress.style.width = '10%';
+
+        console.log('Calling preloadGetData...');
+        const data = await preloadGetData(url);
+        console.log('Spotify data received:', data);
+        
+        let tracks = [];
+        const isPlaylist = data.type === 'playlist' || data.type === 'album';
+        let playlistFolder = null;
+        let zipPath = null;
+
+        if (isPlaylist) {
+            console.log('Fetching tracks for playlist/album...');
+            const allTracks = await preloadGetTracks(url);
+            console.log('All tracks received:', allTracks);
+            // Preserve the original order of tracks
+            tracks = allTracks.map((t, index) => ({ 
+                name: t.name, 
+                artist: t.artists[0].name,
+                originalIndex: index // Keep track of original position
+            }));
+        } else if (data.type === 'track') {
+            tracks = [{ name: data.name, artist: data.artists[0].name, originalIndex: 0 }];
+        } else {
+            throw new Error('Unsupported Spotify link');
+        }
+
+        console.log('Tracks to download:', tracks);
+        let successCount = 0;
+
+        // Sort tracks by their original index to ensure correct order
+        tracks.sort((a, b) => a.originalIndex - b.originalIndex);
+
+        for (let i = 0; i < tracks.length; i++) {
+            const track = tracks[i];
+            console.log(`Processing track ${i + 1}/${tracks.length}:`, track);
+            
+            status.textContent = `Searching YouTube for: ${track.name} by ${track.artist}`;
+            progress.style.width = `${((i + 1) / tracks.length) * 100}%`;
+
+            const searchQuery = `${track.name} ${track.artist} official music video`;
+            console.log('YouTube search query:', searchQuery);
+            
+            const results = await preloadYtSearch(searchQuery);
+            console.log('YouTube search results:', results);
+            
+            const video = results.videos[0];
+            console.log('Selected video:', video);
+
+            if (!video) {
+                console.log(`No video found for: ${track.name}`);
+                status.textContent = `Could not find video for: ${track.name}`;
+                continue;
+            }
+
+            try {
+                console.log('Starting download for:', video.url);
+                status.textContent = `Downloading: ${track.name}`;
+                
+                // Ensure URL is properly formatted
+                const videoUrl = video.url.startsWith('http') ? video.url : `https://www.youtube.com/watch?v=${video.videoId}`;
+                console.log('Formatted video URL:', videoUrl);
+                
+                const result = await ytdlDownload(videoUrl, track.name, track.artist, format, isPlaylist);
+                console.log('Download completed for:', track.name);
+                successCount++;
+                
+                // Store playlist folder and zip path from first successful download
+                if (isPlaylist && result.isPlaylist && !playlistFolder) {
+                    playlistFolder = result.folderPath;
+                    zipPath = result.zipPath;
+                }
+
+                // Add a small delay between downloads to prevent race conditions
+                if (i < tracks.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            } catch (error) {
+                console.error(`Download error for ${track.name}:`, error);
+                status.textContent = `Error downloading: ${track.name} - ${error.message}`;
+                continue;
+            }
+        }
+
+        // Create zip file if this was a playlist download
+        if (isPlaylist && playlistFolder && zipPath && successCount > 0) {
+            status.textContent = 'Creating zip file...';
+            try {
+                await window.electronAPI.createPlaylistZip(playlistFolder, zipPath);
+                status.textContent = `Download complete! (${successCount}/${tracks.length} videos) - Playlist zipped`;
+            } catch (error) {
+                console.error('Error creating zip:', error);
+                status.textContent = `Download complete but zip creation failed: ${error.message}`;
+            }
+        } else if (successCount > 0) {
+            status.textContent = isPlaylist 
+                ? `Download complete! (${successCount}/${tracks.length} videos)`
+                : 'Download complete!';
+        } else {
+            status.textContent = 'No videos were downloaded successfully';
+        }
+    } catch (error) {
+        console.error('Main download error:', error);
+        status.textContent = `Error: ${error.message}`;
+    } finally {
+        downloadBtn.disabled = false;
+        setTimeout(() => {
+            progress.style.width = '0%';
+        }, 1000);
+    }
+}
+
   function isSpotifyUrl(url) {
     return url.includes('open.spotify.com/');
   }
 
-  // Optional helper if you need to convert stream to buffer anywhere:
   function streamToBuffer(stream) {
     return new Promise((resolve, reject) => {
       const chunks = [];

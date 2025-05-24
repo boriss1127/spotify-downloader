@@ -256,8 +256,8 @@ h1 {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.format-label {
-  color: rgba(255, 255, 255, 0.6);
+.format-switch span {
+  color: white;
   font-size: 1rem;
   font-weight: 500;
   transition: all 0.3s ease;

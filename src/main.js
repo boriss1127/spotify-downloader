@@ -1,11 +1,12 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 const remoteMain = require('@electron/remote/main');
-const play = require('play-dl');
+const { execFile } = require('child_process');
 const { search } = require('yt-search');
 const fs = require('fs');
 const { shell } = require('electron');
 const fetch = require('node-fetch');
+const archiver = require('archiver');
 require('dotenv').config();
 
 remoteMain.initialize();
@@ -69,83 +70,54 @@ async function getSpotifyToken() {
     return data.access_token;
 }
 
-// Improved YouTube video download function
+// Improved YouTube video download function using yt-dlp
 async function downloadYouTubeVideo(url, outputPath, format = 'mp3') {
     console.log('Starting download for:', url);
     console.log('Output path:', outputPath);
     console.log('Format:', format);
 
     try {
-        console.log('Processing URL:', url);
-        console.log('Fetching video info...');
+        const ytDlpPath = path.join(__dirname, '..', 'yt-dlp.exe');
+        console.log('yt-dlp path:', ytDlpPath);
 
-        // Get stream based on format
-        const streamOptions = {
-            quality: format === 'mp4' ? 140 : 140, // 140 is a good quality for both audio and video
-            discordPlayerCompatibility: false
-        };
-
-        console.log('Stream options:', streamOptions);
-        const stream = await play.stream(url, streamOptions);
+        // Configure format based on user selection
+        const formatArg = format === 'mp4' ? 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' : 'bestaudio[ext=m4a]/bestaudio/best';
         
-        if (!stream || !stream.stream) {
-            throw new Error('Failed to create download stream');
-        }
+        const args = [
+            '-f', formatArg,
+            '-o', outputPath,
+            '--no-playlist',
+            '--no-warnings',
+            '--no-progress',
+            url
+        ];
 
-        console.log('Stream created successfully');
-        
-        // Add timeout handling
-        const timeout = setTimeout(() => {
-            stream.stream.destroy();
-            throw new Error('Download timeout - taking too long');
-        }, 300000); // 5 minute timeout
+        console.log('Download args:', args);
 
-        const writeStream = fs.createWriteStream(outputPath);
-        
         return new Promise((resolve, reject) => {
-            let downloadedBytes = 0;
-            let lastLogTime = Date.now();
+            const proc = execFile(ytDlpPath, args);
 
-            // Handle data chunks
-            stream.stream.on('data', (chunk) => {
-                downloadedBytes += chunk.length;
-                const now = Date.now();
-                if (now - lastLogTime > 1000) { // Log every second
-                    console.log(`Downloaded: ${(downloadedBytes / 1024 / 1024).toFixed(2)} MB`);
-                    lastLogTime = now;
+            proc.stdout?.on('data', data => {
+                console.log('Download progress:', data.toString());
+            });
+
+            proc.stderr?.on('data', data => {
+                console.log('Download info:', data.toString());
+            });
+
+            proc.on('close', code => {
+                console.log('Download completed with code:', code);
+                if (code === 0) {
+                    resolve();
+                } else {
+                    reject(new Error(`Download failed with code ${code}`));
                 }
             });
 
-            // Handle stream end
-            stream.stream.on('end', () => {
-                console.log('Stream ended');
-                writeStream.end();
+            proc.on('error', error => {
+                console.error('Process error:', error);
+                reject(error);
             });
-
-            // Handle stream errors
-            stream.stream.on('error', (error) => {
-                clearTimeout(timeout);
-                console.error('Stream error:', error);
-                writeStream.end();
-                reject(new Error(`Stream error: ${error.message}`));
-            });
-
-            // Handle write stream errors
-            writeStream.on('error', (error) => {
-                clearTimeout(timeout);
-                console.error('Write stream error:', error);
-                reject(new Error(`Write error: ${error.message}`));
-            });
-
-            // Handle write stream finish
-            writeStream.on('finish', () => {
-                clearTimeout(timeout);
-                console.log('Download completed successfully');
-                resolve();
-            });
-
-            // Pipe the stream to the file
-            stream.stream.pipe(writeStream);
         });
     } catch (error) {
         console.error('Download failed:', error);
@@ -154,221 +126,273 @@ async function downloadYouTubeVideo(url, outputPath, format = 'mp3') {
 }
 
 function createWindow() {
-  console.log('Creating main window');
-  mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    minWidth: 800,
-    minHeight: 600,
-    frame: false,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: true,
-      contextIsolation: true,
-      enableRemoteModule: true,
-      webSecurity: true,
-      sandbox: false
-    }
-  });
+    console.log('Creating main window');
+    mainWindow = new BrowserWindow({
+        width: 1000,
+        height: 700,
+        minWidth: 800,
+        minHeight: 600,
+        frame: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: true,
+            contextIsolation: true,
+            enableRemoteModule: true,
+            webSecurity: true,
+            sandbox: false
+        }
+    });
 
-  remoteMain.enable(mainWindow.webContents);
+    remoteMain.enable(mainWindow.webContents);
 
-  // Hide the default menu bar
-  Menu.setApplicationMenu(null);
+    // Hide the default menu bar
+    Menu.setApplicationMenu(null);
 
-  // Load the main HTML
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    // Load the main HTML
+    mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  // Enable dev tools for debugging - remove this line in production
-  // mainWindow.webContents.openDevTools();
+    // Enable dev tools for debugging - remove this line in production
+    // mainWindow.webContents.openDevTools();
 
-  // Window control handlers via IPC
-  ipcMain.on('minimize', () => {
-    console.log('Main: Received minimize event');
-    if (mainWindow) {
-      mainWindow.minimize();
-      console.log('Window minimized');
-    }
-  });
+    // Window control handlers via IPC
+    ipcMain.on('minimize', () => {
+        console.log('Main: Received minimize event');
+        if (mainWindow) {
+            mainWindow.minimize();
+            console.log('Window minimized');
+        }
+    });
 
-  ipcMain.on('maximize', () => {
-    console.log('Main: Received maximize event');
-    if (mainWindow) {
-      if (mainWindow.isMaximized()) {
-        mainWindow.unmaximize();
-        console.log('Window unmaximized');
-      } else {
-        mainWindow.maximize();
-        console.log('Window maximized');
-      }
-    }
-  });
+    ipcMain.on('maximize', () => {
+        console.log('Main: Received maximize event');
+        if (mainWindow) {
+            if (mainWindow.isMaximized()) {
+                mainWindow.unmaximize();
+                console.log('Window unmaximized');
+            } else {
+                mainWindow.maximize();
+                console.log('Window maximized');
+            }
+        }
+    });
 
-  ipcMain.on('close', () => {
-    console.log('Main: Received close event');
-    if (mainWindow) {
-      mainWindow.close();
-      console.log('Window closed');
-    }
-  });
+    ipcMain.on('close', () => {
+        console.log('Main: Received close event');
+        if (mainWindow) {
+            mainWindow.close();
+            console.log('Window closed');
+        }
+    });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
 }
 
 // Spotify and YouTube IPC handlers
 ipcMain.handle('get-data', async (event, url) => {
-  try {
-    if (!url) {
-      throw new Error('No URL provided');
+    try {
+        if (!url) {
+            throw new Error('No URL provided');
+        }
+
+        if (!isValidSpotifyUrl(url)) {
+            throw new Error('Invalid Spotify URL. Please provide a valid Spotify track, album, or playlist URL.');
+        }
+
+        console.log('Fetching Spotify data for URL:', url);
+        
+        const spotifyInfo = getSpotifyInfo(url);
+        if (!spotifyInfo) {
+            throw new Error('Could not extract Spotify information from URL');
+        }
+
+        const token = await getSpotifyToken();
+        const response = await fetch(`https://api.spotify.com/v1/${spotifyInfo.type}s/${spotifyInfo.id}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch Spotify data');
+        }
+
+        const data = await response.json();
+        return {
+            name: data.name,
+            type: spotifyInfo.type,
+            artists: data.artists || [{ name: data.owner?.display_name || 'Unknown Artist' }]
+        };
+    } catch (error) {
+        console.error('Error getting Spotify data:', error);
+        throw error;
     }
-
-    if (!isValidSpotifyUrl(url)) {
-      throw new Error('Invalid Spotify URL. Please provide a valid Spotify track, album, or playlist URL.');
-    }
-
-    console.log('Fetching Spotify data for URL:', url);
-    
-    const spotifyInfo = getSpotifyInfo(url);
-    if (!spotifyInfo) {
-      throw new Error('Could not extract Spotify information from URL');
-    }
-
-    const token = await getSpotifyToken();
-    const response = await fetch(`https://api.spotify.com/v1/${spotifyInfo.type}s/${spotifyInfo.id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch Spotify data');
-    }
-
-    const data = await response.json();
-    return {
-      name: data.name,
-      type: spotifyInfo.type,
-      artists: data.artists || [{ name: data.owner?.display_name || 'Unknown Artist' }]
-    };
-  } catch (error) {
-    console.error('Error getting Spotify data:', error);
-    throw error;
-  }
 });
 
 ipcMain.handle('get-tracks', async (event, url) => {
-  try {
-    if (!url) {
-      throw new Error('No URL provided');
-    }
-
-    if (!isValidSpotifyUrl(url)) {
-      throw new Error('Invalid Spotify URL. Please provide a valid Spotify track, album, or playlist URL.');
-    }
-
-    console.log('Fetching Spotify tracks for URL:', url);
-    
-    const spotifyInfo = getSpotifyInfo(url);
-    if (!spotifyInfo) {
-      throw new Error('Could not extract Spotify information from URL');
-    }
-
-    const token = await getSpotifyToken();
-    let tracks = [];
-
-    if (spotifyInfo.type === 'track') {
-      const response = await fetch(`https://api.spotify.com/v1/tracks/${spotifyInfo.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    try {
+        if (!url) {
+            throw new Error('No URL provided');
         }
-      });
-      const data = await response.json();
-      tracks = [{
-        name: data.name,
-        artists: data.artists.map(artist => ({ name: artist.name }))
-      }];
-    } else {
-      const response = await fetch(`https://api.spotify.com/v1/${spotifyInfo.type}s/${spotifyInfo.id}/tracks`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      tracks = data.items.map(item => ({
-        name: item.track.name,
-        artists: item.track.artists.map(artist => ({ name: artist.name }))
-      }));
-    }
 
-    return tracks;
-  } catch (error) {
-    console.error('Error getting Spotify tracks:', error);
-    throw error;
-  }
+        if (!isValidSpotifyUrl(url)) {
+            throw new Error('Invalid Spotify URL. Please provide a valid Spotify track, album, or playlist URL.');
+        }
+
+        console.log('Fetching Spotify tracks for URL:', url);
+        
+        const spotifyInfo = getSpotifyInfo(url);
+        if (!spotifyInfo) {
+            throw new Error('Could not extract Spotify information from URL');
+        }
+
+        const token = await getSpotifyToken();
+        let tracks = [];
+
+        if (spotifyInfo.type === 'track') {
+            const response = await fetch(`https://api.spotify.com/v1/tracks/${spotifyInfo.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            tracks = [{
+                name: data.name,
+                artists: data.artists.map(artist => ({ name: artist.name }))
+            }];
+        } else {
+            const response = await fetch(`https://api.spotify.com/v1/${spotifyInfo.type}s/${spotifyInfo.id}/tracks`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            tracks = data.items.map(item => {
+                const track = item.track || item;
+                return {
+                    name: track.name,
+                    artists: track.artists.map(artist => ({ name: artist.name }))
+                };
+            });
+        }
+
+        return tracks;
+    } catch (error) {
+        console.error('Error getting Spotify tracks:', error);
+        throw error;
+    }
 });
 
 ipcMain.handle('yt-search', async (event, query) => {
-  try {
-    if (!query) {
-      throw new Error('No search query provided');
-    }
-
-    console.log('Searching YouTube for:', query);
-    const results = await search(query);
-    
-    if (!results || !results.videos) {
-      throw new Error('No search results found');
-    }
-
-    // Convert the results to a plain object to avoid cloning issues
-    return {
-      videos: results.videos.map(video => ({
-        title: video.title,
-        url: video.url,
-        videoId: video.videoId,
-        author: {
-          name: video.author.name
+    try {
+        if (!query) {
+            throw new Error('No search query provided');
         }
-      }))
-    };
-  } catch (error) {
-    console.error('Error searching YouTube:', error);
-    throw error;
-  }
+
+        console.log('Searching YouTube for:', query);
+        const results = await search(query);
+        
+        if (!results || !results.videos) {
+            throw new Error('No search results found');
+        }
+
+        // Convert the results to a plain object to avoid cloning issues
+        return {
+            videos: results.videos.map(video => ({
+                title: video.title,
+                url: video.url,
+                videoId: video.videoId,
+                author: {
+                    name: video.author.name
+                }
+            }))
+        };
+    } catch (error) {
+        console.error('Error searching YouTube:', error);
+        throw error;
+    }
 });
 
-// Improved download handler with better error handling
-ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', format = 'mp3') => {
+// Function to create a zip file
+async function createZipFile(sourceDir, zipPath) {
+    return new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(zipPath);
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Maximum compression
+        });
+
+        output.on('close', () => {
+            console.log(`Zip file created: ${zipPath}`);
+            console.log(`Total bytes: ${archive.pointer()}`);
+            resolve();
+        });
+
+        archive.on('error', (err) => {
+            reject(err);
+        });
+
+        archive.pipe(output);
+        archive.directory(sourceDir, false);
+        archive.finalize();
+    });
+}
+
+// Improved download handler with playlist folder and zip support
+ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', format = 'mp3', isPlaylist = false) => {
     try {
-        console.log('Download request received:', { url, title, artist, format });
+        console.log('Download request received:', { url, title, artist, format, isPlaylist });
         
         if (!url || !title) {
             throw new Error('Missing required parameters for download');
         }
 
-        // Validate URL
-        if (typeof url !== 'string' || url.trim() === '') {
-            throw new Error('Invalid URL provided');
+        // For single tracks, download directly to downloads folder
+        let downloadDir = downloadsDir;
+        let zipPath = null;
+        
+        if (isPlaylist) {
+            // Create a sanitized folder name for the playlist/album
+            const sanitizedFolderName = title
+                .replace(/[<>:"/\\|?*]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .substring(0, 100);
+            
+            downloadDir = path.join(downloadsDir, sanitizedFolderName);
+            
+            // Create the folder if it doesn't exist
+            if (!fs.existsSync(downloadDir)) {
+                fs.mkdirSync(downloadDir, { recursive: true });
+            }
+            
+            // Set zip path
+            zipPath = path.join(downloadsDir, `${sanitizedFolderName}.zip`);
         }
 
-        // Clean the filename more thoroughly
+        // Clean the filename
         const sanitizedTitle = `${title} - ${artist}`
-            .replace(/[<>:"/\\|?*]/g, '') // Remove invalid filename characters
-            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .replace(/[<>:"/\\|?*]/g, '')
+            .replace(/\s+/g, ' ')
             .trim()
-            .substring(0, 200); // Limit length
+            .substring(0, 200);
             
-        const outputPath = path.join(downloadsDir, `${sanitizedTitle}.${format}`);
+        const outputPath = path.join(downloadDir, `${sanitizedTitle}.${format}`);
         
         console.log('Sanitized filename:', sanitizedTitle);
         console.log('Full output path:', outputPath);
+        console.log('Using format:', format);
 
         await downloadYouTubeVideo(url, outputPath, format);
         
         console.log('Download successful');
-        return { success: true, path: outputPath };
+        return { 
+            success: true, 
+            path: outputPath,
+            zipPath: isPlaylist ? zipPath : null,
+            isPlaylist: isPlaylist,
+            folderPath: isPlaylist ? downloadDir : null
+        };
         
     } catch (error) {
         console.error('Download error in IPC handler:', error.message);
@@ -376,13 +400,29 @@ ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', fo
     }
 });
 
+// Add new handler for creating zip after all downloads
+ipcMain.handle('create-playlist-zip', async (event, folderPath, zipPath) => {
+    try {
+        console.log('Creating zip file for playlist...');
+        console.log('Folder path:', folderPath);
+        console.log('Zip path:', zipPath);
+
+        await createZipFile(folderPath, zipPath);
+        console.log('Zip file created successfully');
+        return { success: true, zipPath };
+    } catch (error) {
+        console.error('Error creating zip:', error);
+        throw new Error(`Failed to create zip: ${error.message}`);
+    }
+});
+
 ipcMain.handle('open-folder', async () => {
-  try {
-    await shell.openPath(downloadsDir);
-  } catch (error) {
-    console.error('Error opening downloads folder:', error);
-    throw error;
-  }
+    try {
+        await shell.openPath(downloadsDir);
+    } catch (error) {
+        console.error('Error opening downloads folder:', error);
+        throw error;
+    }
 });
 
 // App ready
@@ -390,14 +430,14 @@ app.whenReady().then(createWindow);
 
 // macOS behavior
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+    }
 });
 
 // Exit on all windows closed (except macOS)
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
