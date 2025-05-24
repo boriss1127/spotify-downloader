@@ -1,13 +1,14 @@
-const JSZip = require('jszip');
-const path = require('path');
-const fs = require('fs');
-const ytdl = require('ytdl-core');
-const ytSearch = require('yt-search');
-const { getData, getTracks } = require('spotify-url-info')(require('node-fetch'));
-const { ipcRenderer, shell } = require('electron');
-
+// Remove direct Node.js requires since we're using preload API
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded');
+
+    // Check if electronAPI is available
+    if (!window.electronAPI) {
+        console.error('electronAPI not available - preload script may not be working');
+        return;
+    }
+
+    console.log('electronAPI is available:', window.electronAPI);
 
     const downloadBtn = document.getElementById('downloadBtn');
     const spotifyLink = document.getElementById('spotifyLink');
@@ -17,6 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const minBtn = document.getElementById('min-btn');
     const maxBtn = document.getElementById('max-btn');
     const closeBtn = document.getElementById('close-btn');
+
+    console.log('Buttons found:', {
+        downloadBtn: !!downloadBtn,
+        openFolderBtn: !!openFolderBtn,
+        minBtn: !!minBtn,
+        maxBtn: !!maxBtn,
+        closeBtn: !!closeBtn
+    });
 
     // Helper exposed by preload.js for IPC calls and fs-safe ops
     const { 
@@ -121,15 +130,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (minBtn) {
-      minBtn.onclick = () => windowControls.minimize();
+        console.log('Setting up minimize button handler');
+        minBtn.addEventListener('click', () => {
+            console.log('Minimize button clicked');
+            window.electronAPI.minimize();
+        });
     }
 
     if (maxBtn) {
-      maxBtn.onclick = () => windowControls.maximize();
+        console.log('Setting up maximize button handler');
+        maxBtn.addEventListener('click', () => {
+            console.log('Maximize button clicked');
+            window.electronAPI.maximize();
+        });
     }
 
     if (closeBtn) {
-      closeBtn.onclick = () => windowControls.close();
+        console.log('Setting up close button handler');
+        closeBtn.addEventListener('click', () => {
+            console.log('Close button clicked');
+            window.electronAPI.close();
+        });
     }
 
     let suggestionsDropdown;

@@ -1,82 +1,45 @@
-const { contextBridge, ipcRenderer, shell } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  // Window controls
-  minimize: () => ipcRenderer.send('minimize'),
-  maximize: () => ipcRenderer.send('maximize'),
-  close: () => ipcRenderer.send('close'),
-  
-  // Window controls object (alternative access pattern used in renderer.js)
-  windowControls: {
-    minimize: () => ipcRenderer.send('minimize'),
-    maximize: () => ipcRenderer.send('maximize'),
-    close: () => ipcRenderer.send('close'),
-  },
-  
-  // Spotify data fetching
-  getData: async (url) => {
-    try {
-      return await getData(url);
-    } catch (error) {
-      throw new Error(`Failed to get Spotify data: ${error.message}`);
+console.log('Preload script running');
+
+// Expose protected methods that allow the renderer process to use
+// the ipcRenderer without exposing the entire object
+contextBridge.exposeInMainWorld(
+    'electronAPI',
+    {
+        minimize: () => {
+            console.log('Preload: Sending minimize event');
+            ipcRenderer.send('minimize');
+        },
+        maximize: () => {
+            console.log('Preload: Sending maximize event');
+            ipcRenderer.send('maximize');
+        },
+        close: () => {
+            console.log('Preload: Sending close event');
+            ipcRenderer.send('close');
+        },
+        getData: (url) => {
+            console.log('Preload: Sending getData event');
+            return ipcRenderer.invoke('get-data', url);
+        },
+        getTracks: (url) => {
+            console.log('Preload: Sending getTracks event');
+            return ipcRenderer.invoke('get-tracks', url);
+        },
+        ytdlDownload: (url, title, artist) => {
+            console.log('Preload: Sending ytdlDownload event');
+            return ipcRenderer.invoke('ytdl-download', url, title, artist);
+        },
+        ytSearch: (query) => {
+            console.log('Preload: Sending ytSearch event');
+            return ipcRenderer.invoke('yt-search', query);
+        },
+        openFolder: () => {
+            console.log('Preload: Sending openFolder event');
+            return ipcRenderer.invoke('open-folder');
+        }
     }
-  },
-  
-  getTracks: async (url) => {
-    try {
-      return await getTracks(url);
-    } catch (error) {
-      throw new Error(`Failed to get tracks: ${error.message}`);
-    }
-  },
-  
-  // YouTube search
-  ytSearch: async (query) => {
-    try {
-      return await ytSearch(query);
-    } catch (error) {
-      throw new Error(`YouTube search failed: ${error.message}`);
-    }
-  },
-  
-  // YouTube download
-  ytdlDownload: async (videoUrl, trackName, artistName = '') => {
-    try {
-      const downloadsPath = path.join(os.homedir(), 'Downloads');
-      const fileName = `${trackName}${artistName ? ` - ${artistName}` : ''}.mp4`
-        .replace(/[<>:"/\\|?*]/g, '_'); // Replace invalid filename characters
-      const filePath = path.join(downloadsPath, fileName);
-      
-      return new Promise((resolve, reject) => {
-        const stream = ytdl(videoUrl, { 
-          quality: 'highestaudio',
-          filter: 'audioonly'
-        });
-        
-        const writeStream = fs.createWriteStream(filePath);
-        
-        stream.pipe(writeStream);
-        
-        stream.on('error', (error) => {
-          reject(new Error(`Download failed: ${error.message}`));
-        });
-        
-        writeStream.on('error', (error) => {
-          reject(new Error(`File write failed: ${error.message}`));
-        });
-        
-        writeStream.on('finish', () => {
-          resolve(filePath);
-        });
-      });
-    } catch (error) {
-      throw new Error(`Download setup failed: ${error.message}`);
-    }
-  },
-  
-  // Open downloads folder
-  openFolder: () => {
-    const downloadsPath = path.join(os.homedir(), 'Downloads');
-    shell.openPath(downloadsPath);
-  }
-});
+);
+
+console.log('Preload script completed');
