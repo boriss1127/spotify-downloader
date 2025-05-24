@@ -1,6 +1,6 @@
 @font-face {
-  font-family: 'San Francisco';
-  src: url('../fonts/SFPRODISPLAYREGULAR.OTF') format('opentype');
+  font-family: 'Inter Medium';
+  src: url('../fonts/Inter-Medium.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
 }
@@ -223,6 +223,7 @@ h1 {
   gap: 10px;
   margin-bottom: 1.5rem;
   animation: slideIn 0.5s ease 0.4s both;
+  align-items: center;
 }
 
 @keyframes slideIn {
@@ -236,9 +237,101 @@ h1 {
   }
 }
 
-/* Allow text selection only for the input field */
-input {
-  -webkit-user-select: text; /* For Safari */
+.format-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 20px;
+  border-radius: 30px;
+  margin: 1.5rem auto;
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.format-switch:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.format-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #1DB954;
+  transition: .4s;
+  box-shadow: 0 0 10px rgba(29, 185, 84, 0.3);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .slider {
+  background-color: #1DB954;
+  box-shadow: 0 0 10px rgba(29, 185, 84, 0.3);
+}
+
+input:checked + .slider:before {
+  transform: translateX(30px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Update format labels based on toggle state */
+input:checked ~ .format-label:last-child {
+  color: #1DB954;
+  font-weight: 600;
+}
+
+input:not(:checked) ~ .format-label:first-child {
+  color: #1DB954;
+  font-weight: 600;
+}
+
+/* Update existing input styles */
+input[type="text"] {
+  -webkit-user-select: text;
   user-select: text;
   flex: 1;
   padding: 12px;

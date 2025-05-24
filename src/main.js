@@ -69,108 +69,87 @@ async function getSpotifyToken() {
     return data.access_token;
 }
 
-// Helper function to download YouTube video
-async function downloadYouTubeVideo(url, outputPath) {
+// Improved YouTube video download function
+async function downloadYouTubeVideo(url, outputPath, format = 'mp3') {
+    console.log('Starting download for:', url);
+    console.log('Output path:', outputPath);
+    console.log('Format:', format);
+
     try {
-        console.log('Starting download...');
-        
-        // Validate URL
-        if (!url || typeof url !== 'string' || url.trim() === '') {
-            throw new Error('Invalid or empty URL provided');
-        }
-
-        // Ensure URL is properly formatted
-        const videoUrl = url.trim();
-        if (!videoUrl.startsWith('http')) {
-            throw new Error('Invalid URL format. URL must start with http:// or https://');
-        }
-
-        console.log('Processing URL:', videoUrl);
-        
-        // Get video info
+        console.log('Processing URL:', url);
         console.log('Fetching video info...');
-        const videoInfo = await play.video_info(videoUrl);
-        if (!videoInfo) {
-            throw new Error('Could not get video information');
-        }
 
-        console.log('Video info retrieved:', {
-            title: videoInfo.video_details.title,
-            duration: videoInfo.video_details.durationInSec,
-            channel: videoInfo.video_details.channel.name
-        });
-
-        // Get the best audio stream
-        console.log('Getting audio stream...');
-        const stream = await play.stream(videoUrl, {
-            quality: 140, // 140 is the highest audio quality
+        // Get stream based on format
+        const streamOptions = {
+            quality: format === 'mp4' ? 140 : 140, // 140 is a good quality for both audio and video
             discordPlayerCompatibility: false
-        });
+        };
 
+        console.log('Stream options:', streamOptions);
+        const stream = await play.stream(url, streamOptions);
+        
         if (!stream || !stream.stream) {
-            throw new Error('Could not get audio stream');
+            throw new Error('Failed to create download stream');
         }
 
-        console.log('Stream obtained, creating write stream...');
+        console.log('Stream created successfully');
+        
+        // Add timeout handling
+        const timeout = setTimeout(() => {
+            stream.stream.destroy();
+            throw new Error('Download timeout - taking too long');
+        }, 300000); // 5 minute timeout
+
         const writeStream = fs.createWriteStream(outputPath);
         
         return new Promise((resolve, reject) => {
             let downloadedBytes = 0;
-            const totalBytes = stream.stream?.info?.size || 0;
-
-            console.log('Setting up stream handlers...');
-
-            // Handle stream errors
-            stream.stream.on('error', (error) => {
-                console.error('Stream error:', error);
-                writeStream.end();
-                reject(error);
-            });
-
-            // Handle write stream errors
-            writeStream.on('error', (error) => {
-                console.error('Write error:', error);
-                reject(error);
-            });
-
-            // Handle successful completion
-            writeStream.on('finish', () => {
-                console.log('Write stream finished');
-                console.log('Download completed successfully');
-                console.log(`Total downloaded: ${(downloadedBytes / 1024 / 1024).toFixed(2)} MB`);
-                resolve();
-            });
+            let lastLogTime = Date.now();
 
             // Handle data chunks
             stream.stream.on('data', (chunk) => {
                 downloadedBytes += chunk.length;
-                const mbDownloaded = (downloadedBytes / 1024 / 1024).toFixed(2);
-                console.log(`Downloaded: ${mbDownloaded} MB`);
+                const now = Date.now();
+                if (now - lastLogTime > 1000) { // Log every second
+                    console.log(`Downloaded: ${(downloadedBytes / 1024 / 1024).toFixed(2)} MB`);
+                    lastLogTime = now;
+                }
             });
 
             // Handle stream end
             stream.stream.on('end', () => {
-                console.log('Read stream ended');
+                console.log('Stream ended');
+                writeStream.end();
             });
 
-            // Handle write stream close
-            writeStream.on('close', () => {
-                console.log('Write stream closed');
+            // Handle stream errors
+            stream.stream.on('error', (error) => {
+                clearTimeout(timeout);
+                console.error('Stream error:', error);
+                writeStream.end();
+                reject(new Error(`Stream error: ${error.message}`));
             });
 
-            console.log('Starting pipe operation...');
-            // Pipe the stream and handle errors
-            try {
-                stream.stream.pipe(writeStream);
-                console.log('Pipe operation started successfully');
-            } catch (error) {
-                console.error('Error during pipe operation:', error);
-                reject(error);
-            }
+            // Handle write stream errors
+            writeStream.on('error', (error) => {
+                clearTimeout(timeout);
+                console.error('Write stream error:', error);
+                reject(new Error(`Write error: ${error.message}`));
+            });
+
+            // Handle write stream finish
+            writeStream.on('finish', () => {
+                clearTimeout(timeout);
+                console.log('Download completed successfully');
+                resolve();
+            });
+
+            // Pipe the stream to the file
+            stream.stream.pipe(writeStream);
         });
     } catch (error) {
         console.error('Download failed:', error);
-        throw error;
+        throw new Error(`Download failed: ${error.message}`);
     }
 }
 
@@ -200,6 +179,9 @@ function createWindow() {
   // Load the main HTML
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
+  // Enable dev tools for debugging - remove this line in production
+  // mainWindow.webContents.openDevTools();
+
   // Window control handlers via IPC
   ipcMain.on('minimize', () => {
     console.log('Main: Received minimize event');
@@ -208,10 +190,6 @@ function createWindow() {
       console.log('Window minimized');
     }
   });
-
-  // ipcMain.on('open-dev-tools', () => {
-    //mainWindow.webContents.openDevTools();
-  //});
 
   ipcMain.on('maximize', () => {
     console.log('Main: Received maximize event');
@@ -361,8 +339,11 @@ ipcMain.handle('yt-search', async (event, query) => {
   }
 });
 
-ipcMain.handle('ytdl-download', async (event, url, title, artist) => {
+// Improved download handler with better error handling
+ipcMain.handle('ytdl-download', async (event, url, title, artist = 'Unknown', format = 'mp3') => {
     try {
+        console.log('Download request received:', { url, title, artist, format });
+        
         if (!url || !title) {
             throw new Error('Missing required parameters for download');
         }
@@ -372,17 +353,26 @@ ipcMain.handle('ytdl-download', async (event, url, title, artist) => {
             throw new Error('Invalid URL provided');
         }
 
-        const sanitizedTitle = `${title} - ${artist}`.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const outputPath = path.join(downloadsDir, `${sanitizedTitle}.mp3`);
+        // Clean the filename more thoroughly
+        const sanitizedTitle = `${title} - ${artist}`
+            .replace(/[<>:"/\\|?*]/g, '') // Remove invalid filename characters
+            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .trim()
+            .substring(0, 200); // Limit length
+            
+        const outputPath = path.join(downloadsDir, `${sanitizedTitle}.${format}`);
         
-        console.log('Downloading from YouTube:', url);
-        console.log('Output path:', outputPath);
+        console.log('Sanitized filename:', sanitizedTitle);
+        console.log('Full output path:', outputPath);
 
-        await downloadYouTubeVideo(url, outputPath);
+        await downloadYouTubeVideo(url, outputPath, format);
+        
+        console.log('Download successful');
         return { success: true, path: outputPath };
+        
     } catch (error) {
-        console.error('Error downloading from YouTube:', error);
-        throw error;
+        console.error('Download error in IPC handler:', error.message);
+        throw new Error(`Download failed: ${error.message}`);
     }
 });
 
