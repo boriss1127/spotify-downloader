@@ -1,3 +1,8 @@
+/* This app is the worst app ever, 
+   please go to https://github.com/hero3806/SkibidiDownloader for the better app. 
+   bad boris fr
+*/
+
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 const remoteMain = require('@electron/remote/main');
