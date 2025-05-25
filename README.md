@@ -12,7 +12,7 @@ It will download in your Downloads folder, in a folder called "Spotify Downloads
 
 ---
 
-<!-- <video src="/img-src/README/ee.mov"> -->
+If you've downloaded a version, and you want to update, just download the newer .exe and run it as shown above, and it will automatically update the app, you don't need to uninstall anything.
 
 ---
 
