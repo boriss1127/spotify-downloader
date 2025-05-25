@@ -6,7 +6,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder" 
+    "build": "electron-builder"
   },
   "build": {
     "appId": "com.spotify.downloader",
@@ -21,7 +21,8 @@
     },
     "mac": {
       "target": ["dmg", "zip"],
-      "category": "public.app-category.music"
+      "category": "public.app-category.music",
+      "icon": "img-src/icon.icns"
     },
     "nsis": {
       "oneClick": true,

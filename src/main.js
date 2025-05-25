@@ -112,8 +112,18 @@ async function downloadYouTubeVideo(url, outputPath, format = 'mp3') {
     console.log('Format:', format);
 
     try {
-        const ytDlpPath = path.join(__dirname, '..', 'yt-dlp.exe');
+        // Get the correct yt-dlp binary based on platform
+        const ytDlpPath = path.join(__dirname, '..', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
         console.log('yt-dlp path:', ytDlpPath);
+
+        // Make yt-dlp executable on macOS/Linux
+        if (process.platform !== 'win32') {
+            try {
+                fs.chmodSync(ytDlpPath, '755');
+            } catch (error) {
+                console.error('Error making yt-dlp executable:', error);
+            }
+        }
 
         // Check if FFmpeg is available
         const ffmpegCheck = await new Promise((resolve) => {
