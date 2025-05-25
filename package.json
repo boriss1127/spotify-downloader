@@ -1,6 +1,6 @@
 {
   "name": "spotify-downloader",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Spotify downloader application",
   "author": "Boris",
   "main": "src/main.js",
@@ -19,6 +19,10 @@
       ],
       "icon": "img-src/icon.ico"
     },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "category": "public.app-category.music"
+    },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
@@ -33,6 +37,7 @@
       "img-src/**/*",
       "fonts/**/*",
       "yt-dlp.exe",
+      "yt-dlp",
       ".env"
     ]
   },
