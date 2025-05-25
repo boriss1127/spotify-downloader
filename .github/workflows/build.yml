@@ -30,12 +30,12 @@ jobs:
 
       - name: Download yt-dlp
         run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -o yt-dlp.exe
-          else
-            curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp
+          if ("${{ matrix.os }}" -eq "windows-latest") {
+            Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile yt-dlp.exe
+          } else {
+            Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -OutFile yt-dlp
             chmod +x yt-dlp
-          fi
+          }
 
       - name: Build/Release Electron app
         uses: samuelmeuli/action-electron-builder@v1
