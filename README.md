@@ -12,10 +12,6 @@ It will download in your Downloads folder, in a folder called "Spotify Downloads
 
 ---
 
-https://github.com/user-attachments/assets/ec622b18-fc2d-4959-839f-13318e24c142 <!-- <video src="/img-src/README/ee.mov"> -->
-
----
-
 PATCH NOTES-
 
 **v1.0.0** - **_Release 1_**. <br>
