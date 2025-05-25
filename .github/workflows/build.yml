@@ -41,24 +41,24 @@ jobs:
       - name: Build/Release Electron app
         uses: samuelmeuli/action-electron-builder@v1
         with:
-          github_token: ${{ secrets.github_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          mac_certs: ${{ secrets.mac_certs }}
-          mac_certs_password: ${{ secrets.mac_certs_password }}
-          windows_signing: ${{ secrets.windows_signing }}
+          mac_certs: ${{ secrets.mac_certs || '' }}
+          mac_certs_password: ${{ secrets.mac_certs_password || '' }}
+          windows_signing: ${{ secrets.windows_signing || '' }}
         env:
-          GH_TOKEN: ${{ secrets.github_token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload macOS App Artifact
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spotify-downloader-macos-app
           path: dist/mac/*
 
       - name: Upload Windows Executable Artifact
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spotify-downloader-windows-exe
           path: dist/*.exe
