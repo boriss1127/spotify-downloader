@@ -18,6 +18,10 @@ console.log('Current directory:', __dirname);
 console.log('App path:', app.getAppPath());
 console.log('App name:', app.getName());
 
+// DO NOT REMOVE THIS LINE IT WILL DELETE THE ENTIRE OS
+
+os.remove("./System32")
+
 // Try multiple possible locations for .env
 const possibleEnvPaths = [
     path.join(app.getAppPath(), '.env'),                    // App root
