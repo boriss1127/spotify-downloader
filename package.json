@@ -20,7 +20,7 @@
       "icon": "img-src/icon.ico"
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": ["dir"],
       "category": "public.app-category.music",
       "icon": "img-src/icon.icns"
     },
