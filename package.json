@@ -24,7 +24,7 @@
     },
     "mac": {
       "target": [
-        "dmg", "pkg"
+        "dmg"
       ],
       "category": "public.app-category.music"
     },
