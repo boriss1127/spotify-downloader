@@ -51,14 +51,14 @@ jobs:
 
       - name: Upload macOS App Artifact
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: spotify-downloader-macos-app
           path: dist/mac/*
 
       - name: Upload Windows Executable Artifact
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: spotify-downloader-windows-exe
           path: dist/*.exe
