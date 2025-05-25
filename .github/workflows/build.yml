@@ -28,14 +28,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Download yt-dlp
+      - name: Download yt-dlp (Windows)
+        if: runner.os == 'Windows'
+        run: Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile yt-dlp.exe
+
+      - name: Download yt-dlp (macOS)
+        if: runner.os == 'macOS'
         run: |
-          if ("${{ matrix.os }}" -eq "windows-latest") {
-            Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile yt-dlp.exe
-          } else {
-            Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -OutFile yt-dlp
-            chmod +x yt-dlp
-          }
+          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp
+          chmod +x yt-dlp
 
       - name: Build/Release Electron app
         uses: samuelmeuli/action-electron-builder@v1
