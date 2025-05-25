@@ -115,8 +115,33 @@ async function downloadYouTubeVideo(url, outputPath, format = 'mp3') {
         const ytDlpPath = path.join(__dirname, '..', 'yt-dlp.exe');
         console.log('yt-dlp path:', ytDlpPath);
 
-        // Configure format based on user selection
-        const formatArg = format === 'mp4' ? 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best' : 'bestaudio[ext=m4a]/bestaudio/best';
+        // Check if FFmpeg is available
+        const ffmpegCheck = await new Promise((resolve) => {
+            execFile(ytDlpPath, ['--version'], (error, stdout, stderr) => {
+                if (error) {
+                    console.error('Error checking yt-dlp version:', error);
+                    resolve(false);
+                    return;
+                }
+                // Check if FFmpeg is available in the output
+                const hasFFmpeg = stdout.includes('ffmpeg') || stderr.includes('ffmpeg');
+                resolve(hasFFmpeg);
+            });
+        });
+
+        // Configure format based on user selection and FFmpeg availability
+        let formatArg;
+        if (format === 'mp4') {
+            if (ffmpegCheck) {
+                // If FFmpeg is available, download best video and audio separately
+                formatArg = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
+            } else {
+                // If FFmpeg is not available, download a single file with both video and audio
+                formatArg = 'best[ext=mp4]/best';
+            }
+        } else {
+            formatArg = 'bestaudio[ext=m4a]/bestaudio/best';
+        }
         
         const args = [
             '-f', formatArg,
