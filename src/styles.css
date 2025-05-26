@@ -99,7 +99,7 @@ body {
   display: flex;
   flex-direction: row;
   gap: 5px;
-  /* -webkit-app-region: no-drag; */
+  -webkit-app-region: no-drag;
   align-items: center;
   justify-content: flex-end;
 }
