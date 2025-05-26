@@ -48,14 +48,14 @@ jobs:
 
       - name: Upload macOS DMG Artifact
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spotify-downloader-macos
           path: dist/*.dmg
 
       - name: Upload Windows Executable Artifact
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spotify-downloader-windows
           path: dist/*.exe
