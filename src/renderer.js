@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (settingsBtn) {
     settingsBtn.onclick = () => {
-      window.location.href = 'settings.html';
+      window.location.href = 'media-settings.html';
     };
   }
 

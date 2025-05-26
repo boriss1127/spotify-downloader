@@ -10,19 +10,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const prevPageBtn = document.getElementById('prevPage');
     const nextPageBtn = document.getElementById('nextPage');
     const pageDots = document.querySelectorAll('.page-dot');
-    const settingsSections = document.querySelectorAll('.settings-section');
     const animatedDot = document.querySelector('.animated-dot');
-
-    let currentPageIndex = 0;
-    const totalPages = 2; // Total number of settings pages
-    let isTransitioning = false;
+    const settingsContainer = document.querySelector('.settings-container');
 
     // Load saved settings
     loadSettings();
 
+    // Function to trigger animation and navigate
+    function navigateWithAnimation(targetUrl) {
+        if (settingsContainer) {
+            settingsContainer.classList.add('pop');
+            // Use setTimeout instead of animationend for potentially more reliable navigation after animation
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 0); // Reverted delay back to 400ms
+
+            // Remove the pop class after the animation duration to allow it to be triggered again
+            setTimeout(() => {
+                settingsContainer.classList.remove('pop');
+            }, 400); // Remove class after animation completes (match animation duration)
+
+        } else {
+            // Fallback if container not found
+            window.location.href = targetUrl;
+        }
+    }
+
     // Back button handler
     backBtn.addEventListener('click', () => {
-        window.location.href = 'index.html';
+        navigateWithAnimation('index.html');
     });
 
     // Window control handlers
@@ -92,84 +108,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Page navigation functions
-    function updatePageDisplay(direction = 'next') {
-        if (isTransitioning) return;
-        isTransitioning = true;
-
-        // Add transitioning class to container
-        const container = document.querySelector('.settings-container');
-        container.classList.add('transitioning');
-
-        // Get all sections
-        const sections = document.querySelectorAll('.settings-section');
-        const currentSection = sections[currentPageIndex];
-        const nextSection = sections[currentPageIndex + (direction === 'next' ? 1 : -1)];
-
-        if (currentSection) {
-            currentSection.classList.add(direction === 'next' ? 'slide-out' : 'slide-in');
-        }
-
-        if (nextSection) {
-            nextSection.classList.add('active');
-            nextSection.classList.add(direction === 'next' ? 'slide-in' : 'slide-out');
-        }
-
-        // Update dots
-        pageDots.forEach((dot, index) => {
-            if (index === currentPageIndex) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
-        });
-
-        // Update animated dot position
-        const dotWidth = 12; // Width of the dot
-        const dotGap = 12; // Gap between dots
-        const newPosition = currentPageIndex * (dotWidth + dotGap);
-        animatedDot.style.left = `${newPosition}px`;
-
-        // Update arrow button states
-        prevPageBtn.disabled = currentPageIndex === 0;
-        nextPageBtn.disabled = currentPageIndex === totalPages - 1;
-
-        // Reset transition flag and remove transitioning class after animation completes
-        setTimeout(() => {
-            isTransitioning = false;
-            container.classList.remove('transitioning');
-            if (currentSection) {
-                currentSection.classList.remove('active', 'slide-out', 'slide-in');
-            }
-            if (nextSection) {
-                nextSection.classList.remove('slide-in', 'slide-out');
-            }
-        }, 400); // Match the CSS transition duration
-    }
-
-    // Previous page button handler
-    prevPageBtn.addEventListener('click', () => {
-        if (currentPageIndex > 0 && !isTransitioning) {
-            currentPageIndex--;
-            updatePageDisplay('prev');
+    // Navigation handlers
+    prevPageBtn?.addEventListener('click', () => {
+        const currentPage = window.location.pathname.split('/').pop();
+        if (currentPage === 'downloader-settings.html') {
+            navigateWithAnimation('media-settings.html');
         }
     });
 
-    // Next page button handler
-    nextPageBtn.addEventListener('click', () => {
-        if (currentPageIndex < totalPages - 1 && !isTransitioning) {
-            currentPageIndex++;
-            updatePageDisplay('next');
+    nextPageBtn?.addEventListener('click', () => {
+        const currentPage = window.location.pathname.split('/').pop();
+        if (currentPage === 'media-settings.html') {
+            navigateWithAnimation('downloader-settings.html');
         }
     });
 
     // Page dot click handlers
-    pageDots.forEach((dot, index) => {
+    pageDots.forEach((dot) => {
         dot.addEventListener('click', () => {
-            if (currentPageIndex !== index && !isTransitioning) {
-                const direction = index > currentPageIndex ? 'next' : 'prev';
-                currentPageIndex = index;
-                updatePageDisplay(direction);
+            const targetPage = dot.getAttribute('data-page');
+            if (targetPage && targetPage !== window.location.pathname.split('/').pop()) {
+                navigateWithAnimation(targetPage);
             }
         });
     });
@@ -211,6 +170,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize page display
     const currentPage = window.location.pathname.split('/').pop();
-    currentPageIndex = currentPage === 'video-settings.html' ? 1 : 0;
-    updatePageDisplay();
+    const currentDot = document.querySelector(`.page-dot[data-page="${currentPage}"]`);
+    if (currentDot) {
+        currentDot.classList.add('active');
+    }
+
+    // Update arrow button states
+    if (prevPageBtn && nextPageBtn) {
+        prevPageBtn.disabled = currentPage === 'media-settings.html';
+        nextPageBtn.disabled = currentPage === 'downloader-settings.html';
+    }
 }); 

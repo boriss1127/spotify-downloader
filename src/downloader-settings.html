@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downloader Settings - Spotify Downloader</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="glow"></div>
+
+    <div class="title-bar">
+        <div class="title">Downloader Settings - Spotify Downloader</div>
+        <div class="window-controls">
+            <button id="min-btn"><img src="../img-src/title-bar/minus.png" alt="-" width="20" height="20"></button>
+            <button id="max-btn"><img src="../img-src/title-bar/sqr.png" alt="sqr" width="15" height="15"></button>
+            <button id="close-btn"><img src="../img-src/title-bar/cross.png" alt="x" width="20" height="20"></button>
+        </div>
+    </div>
+
+    <button class="back-btn" id="backBtn">← Back</button>
+
+    <div class="settings-container">
+        <h1>Downloader Settings</h1>
+        
+        <div class="settings-content">
+            <div class="settings-section active">
+                <div class="settings-row">
+                    <span class="settings-label">Download Location</span>
+                    <div class="settings-control">
+                        <button id="changeFolderBtn" class="open-folder-btn">Change Folder</button>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Open Downloads Folder</span>
+                    <div class="settings-control">
+                        <button id="openFolderBtn" class="open-folder-btn">Open Folder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Navigation -->
+        <div class="page-navigation">
+            <button class="nav-arrow" id="prevPage">
+                <img src="../img-src/pages/left.png" alt="Previous">
+            </button>
+            <div class="page-dots">
+                <button class="page-dot" data-page="media-settings.html" aria-label="Go to Media Settings">
+                    <img src="../img-src/pages/not-filled-in.png" alt="Media Settings" class="page-icon">
+                </button>
+                <button class="page-dot active" data-page="downloader-settings.html" aria-label="Go to Downloader Settings">
+                    <img src="../img-src/pages/filled-in.png" alt="Downloader Settings" class="page-icon">
+                </button>
+                <div class="animated-dot"></div>
+            </div>
+            <button class="nav-arrow" id="nextPage">
+                <img src="../img-src/pages/right.png" alt="Next">
+            </button>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        document.getElementById('changeFolderBtn').addEventListener('click', () => {
+            ipcRenderer.send('select-download-directory');
+        });
+
+        document.getElementById('openFolderBtn').addEventListener('click', () => {
+            ipcRenderer.send('open-downloads-folder');
+        });
+
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
+        // Handle window controls
+        document.getElementById('min-btn').addEventListener('click', () => {
+            ipcRenderer.send('minimize-window');
+        });
+
+        document.getElementById('max-btn').addEventListener('click', () => {
+            ipcRenderer.send('maximize-window');
+        });
+
+        document.getElementById('close-btn').addEventListener('click', () => {
+            ipcRenderer.send('close-window');
+        });
+
+        // Navigation handlers
+        /*
+        document.getElementById('prevPage').addEventListener('click', () => {
+            window.location.href = 'media-settings.html';
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            window.location.href = 'media-settings.html';
+        });
+        */
+
+        // Page dot click handlers
+        document.querySelectorAll('.page-dot').forEach((dot) => {
+            dot.addEventListener('click', () => {
+                const targetPage = dot.getAttribute('data-page');
+                if (targetPage) {
+                    window.location.href = targetPage;
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

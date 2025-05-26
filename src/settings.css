@@ -13,7 +13,7 @@ body {
     width: 600px;
     height: 500px;
     margin: 32px auto 0;
-    padding: 2rem;
+    padding: 1.5rem 2rem 2rem 2rem; /* Reduced top padding */
     position: relative;
     background: rgba(18, 18, 18, 0.95);
     border-radius: 12px;
@@ -25,20 +25,7 @@ body {
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
-    animation: settingsContainerAppear 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settings-container.transitioning {
-    transform: scale(0.98);
-}
-
-.settings-content {
-    flex: 1;
-    position: relative;
-    overflow: hidden; /* Ensure sections don't overflow this container */
-    padding-bottom: 20px; /* Add padding to prevent content being hidden by navigation */
-    box-sizing: border-box;
+    animation: popTransition 0.4s ease-in-out forwards; /* Add pop animation on initial load */
 }
 
 .settings-section {
@@ -47,62 +34,24 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateX(100%);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 0s linear 0.4s;
-    will-change: transform, opacity;
+    background: transparent;
+    border-radius: 0;
+    padding: 0 1.5rem;
+    border: none;
+    opacity: 1;
+    visibility: visible;
 }
 
 .settings-section.active {
     opacity: 1;
     visibility: visible;
-    transform: translateX(0);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 0s linear 0s;
 }
 
-.settings-section.slide-out {
-    transform: translateX(-100%);
-    opacity: 0;
-    visibility: hidden;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 0s linear 0.4s;
-}
-
-.settings-section.slide-in {
-    transform: translateX(100%);
-    opacity: 0;
-    visibility: hidden;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 0s linear 0.4s;
-}
-
-.settings-section.slide-in.active {
-    transform: translateX(0);
-    opacity: 1;
-    visibility: visible;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 0s linear 0s;
-}
-
-.settings-section.slide-out.active {
-    transform: translateX(-100%);
-    opacity: 0;
-    visibility: hidden;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                visibility 0s linear 0.4s;
+/* Remove all animations and transitions */
+.settings-section.slide-out,
+.settings-section.slide-in,
+.settings-section.transitioning {
+    display: none;
 }
 
 .settings-section h2 {
@@ -140,6 +89,7 @@ body {
     display: flex;
     align-items: center;
     font-weight: 500;
+    width: 150px;
 }
 
 .settings-control {
@@ -153,7 +103,7 @@ body {
 
 .back-btn {
     position: absolute;
-    top: 20px;
+    top: 50px;
     left: 20px;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -179,6 +129,8 @@ body {
     font-size: 0.9rem;
     transition: all 0.3s ease;
     cursor: pointer;
+    width: 150px;
+    text-align: center;
 }
 
 .open-folder-btn:hover {
@@ -222,9 +174,8 @@ body {
     transition: transform 0.3s ease;
 }
 
-.nav-arrow:not(:disabled):hover {
-    transform: scale(1.1);
-    background: rgba(255, 255, 255, 0.15);
+.nav-arrow:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .nav-arrow:disabled {
@@ -244,40 +195,37 @@ body {
     gap: 12px;
     align-items: center;
     position: relative;
+    justify-content: center;
 }
 
 .page-dot {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: transparent; /* Transparent background for inactive */
+    border: 1px solid rgba(255, 255, 255, 0.5); /* White outline */
     padding: 0;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .page-dot:hover {
-    transform: scale(1.2);
-    border-color: rgba(255, 255, 255, 0.8);
+    transform: scale(1.1); /* Scale up slightly on hover */
 }
 
 .page-dot.active {
-    background: #1DB954;
-    border-color: #1DB954;
+    background: #1DB954; /* Solid green background for active */
+    border-color: #1DB954; /* Green border for active */
+    transform: scale(1.1); /* Keep active dot slightly larger */
+}
+
+/* Ensure page-icon is not displayed as we're using CSS circles */
+.page-icon {
+    display: none;
 }
 
 .animated-dot {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #1DB954;
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-    z-index: 5;
+    display: none;
 }
 
 h1 {
@@ -288,7 +236,7 @@ h1 {
     text-align: center;
 }
 
-/* Video Settings Specific Styles */
+/* Media Settings Specific Styles */
 .format-switch-container {
     display: flex;
     align-items: center;
@@ -332,7 +280,7 @@ h1 {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #1DB954; /* Green background for both states */
     transition: .4s;
     border-radius: 24px;
 }
@@ -350,7 +298,7 @@ h1 {
 }
 
 input:checked + .slider {
-    background-color: #1DB954;
+    background-color: #1DB954; /* Keep green background when checked */
 }
 
 input:checked + .slider:before {
@@ -388,25 +336,71 @@ input:checked + .slider:before {
     border-left: 4px solid #e74c3c;
 }
 
-/* Add a subtle animation for the settings container */
+/* Remove all keyframe animations */
 @keyframes settingsContainerAppear {
     0% {
-        opacity: 0;
-        transform: scale(0.95) translateY(20px);
+        opacity: 1;
     }
     100% {
         opacity: 1;
-        transform: scale(1) translateY(0);
     }
 }
 
 @keyframes settingsSectionAppear {
     0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.settings-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden; /* Ensure sections don't overflow this container */
+    padding-bottom: 20px; /* Add padding to prevent content being hidden by navigation */
+    box-sizing: border-box;
+}
+
+@keyframes popTransition {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.95);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.settings-container.pop {
+    animation: popTransition 0.4s ease-in-out forwards; /* Apply the pop animation with smoother timing */
+}
+
+@keyframes contentAppear {
+    0% {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(10px);
     }
     100% {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.settings-section.active h1,
+.settings-section.active h2,
+.settings-section.active .settings-row {
+    animation: contentAppear 0.5s ease-out forwards;
+    /* Add a slight delay to stagger if needed, e.g., animation-delay: 0.1s; */
+}
+
+/* Ensure no other animations interfere */
+.settings-section h1,
+.settings-section h2,
+.settings-row {
+    opacity: 0;
+    transform: translateY(10px); /* Set initial state before animation */
 } 
