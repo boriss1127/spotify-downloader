@@ -15,14 +15,17 @@ body {
     margin: 32px auto 0;
     padding: 2rem;
     position: relative;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(18, 18, 18, 0.95);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 30px rgba(29, 185, 84, 0.15),
+                0 0 60px rgba(29, 185, 84, 0.1),
+                0 0 90px rgba(29, 185, 84, 0.05);
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Hide overflowing content */
+    overflow: hidden;
     box-sizing: border-box;
+    animation: settingsContainerAppear 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
 }
 
 .settings-content {
@@ -45,17 +48,19 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0s linear 0.3s; /* Hide instantly after fade */
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
     overflow-y: auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    transform: translateX(20px);
 }
 
 .settings-section.active {
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.3s ease, visibility 0s linear 0s; /* Show instantly before fade */
+    transition: opacity 0.3s ease, visibility 0s linear 0s, transform 0.3s ease;
+    transform: translateX(0);
 }
 
 .settings-section h2 {
@@ -71,31 +76,33 @@ body {
     display: flex;
     align-items: center;
     margin-bottom: 1.5rem;
-    padding: 0 1rem;
-    flex-wrap: wrap;
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 40px;
-    gap: 10px; /* Ensure gap is applied */
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
 }
 
-.settings-row:last-child {
-    margin-bottom: 0;
+.settings-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
 }
 
 .settings-label {
     color: #ffffff;
     font-size: 1rem;
-    flex: 1 1 180px; /* Allow shrinking, basis 180px */
+    flex: 1 1 180px;
     padding-right: 20px;
     box-sizing: border-box;
     min-width: 150px;
     display: flex;
     align-items: center;
+    font-weight: 500;
 }
 
 .settings-control {
-    flex: 0 1 300px; /* Allow shrinking, basis 300px */
+    flex: 0 1 300px;
     min-width: 150px;
     box-sizing: border-box;
     display: flex;
@@ -122,38 +129,58 @@ body {
     border-color: rgba(255, 255, 255, 0.3);
 }
 
+.open-folder-btn {
+    background: rgba(29, 185, 84, 0.1);
+    border: 1px solid rgba(29, 185, 84, 0.2);
+    color: #1DB954;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.open-folder-btn:hover {
+    background: rgba(29, 185, 84, 0.2);
+    border-color: rgba(29, 185, 84, 0.3);
+    transform: translateY(-2px);
+}
+
+.open-folder-btn:active {
+    transform: translateY(0);
+}
+
 .page-navigation {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 20px;
-    padding: 10px 0; /* Adjusted padding */
+    padding: 20px 0;
     margin-top: auto;
-    height: 40px;
-    flex-shrink: 0;
-    position: relative;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-arrow {
     background: transparent;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px;
     cursor: pointer;
-    transition: transform 0.3s ease;
-    filter: brightness(0) invert(1);
+    transition: all 0.3s ease;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .nav-arrow:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
 }
 
-.nav-arrow img {
-    width: 24px;
-    height: 24px;
-    display: block;
+.nav-arrow:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .page-dots {
@@ -161,7 +188,6 @@ body {
     gap: 12px;
     align-items: center;
     position: relative;
-    height: 12px;
 }
 
 .page-dot {
@@ -172,32 +198,30 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.5);
     padding: 0;
     cursor: pointer;
-    position: relative;
-    display: block;
-    box-sizing: border-box;
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .page-dot:hover {
     transform: scale(1.2);
+    border-color: rgba(255, 255, 255, 0.8);
 }
 
-/* Hide the default filled dot image */
-.page-dot img {
-    display: none;
+.page-dot.active {
+    background: #1DB954;
+    border-color: #1DB954;
 }
 
 .animated-dot {
     position: absolute;
     top: 0;
-    left: 0; /* Will be set by JavaScript */
+    left: 0;
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: #ffffff; /* Filled color */
-    transition: left 0.3s ease; /* Animation for movement */
+    background-color: #1DB954;
+    transition: left 0.3s ease;
     pointer-events: none;
-    z-index: 5; /* Ensure it's above the outline dots */
+    z-index: 5;
 }
 
 h1 {
@@ -238,4 +262,79 @@ h1 {
     opacity: 0;
     width: 0;
     height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #1DB954;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0.2, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.toast.success {
+    border-left: 4px solid #1DB954;
+}
+
+.toast.error {
+    border-left: 4px solid #e74c3c;
+}
+
+/* Add a subtle animation for the settings container */
+@keyframes settingsContainerAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 } 

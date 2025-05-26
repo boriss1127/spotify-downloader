@@ -18,7 +18,7 @@ If you've downloaded a version, and you want to update, just download the newer 
 
 PATCH NOTES-
 
-**<ins>v1.0.3**</ins> - **_Release 4_** - Release 3 had a dragging bug, fixed in version 4.
+**<ins>v1.0.3**</ins> - **_Release 4_** - Release 3 had a dragging bug, fixed in version 4. <br>
 **<ins>v1.0.2**</ins> - **_Release 3_** - The app now looks for lyric videos on YouTube if you select MP3 mode, rather than the official Music Video. <br>
 **<ins>v1.0.1</ins>** - **_Release 2_** - The app used to download video and audio separately to get them both the highest quality, and then merge them together using ffmpeg, but wouldn't merge them, if the user did not have ffmpeg installed. Now, it checks if you do have ffmpeg. If you do, it uses the first method. If you don't it downloads them together. <br> **Note** - Downloading them separately will give higher video and audio quality.<br>
 **<ins>v1.0.0**</ins> - **_Release 1_** - First version of app uploaded to Github. <br>
