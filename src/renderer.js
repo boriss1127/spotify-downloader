@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = document.getElementById('spotifyLink').value;
     if (!url) {
         console.log('No URL provided');
+        console.log('No valid URL provided');
         return;
     }
 

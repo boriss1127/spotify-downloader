@@ -245,7 +245,7 @@ function createWindow() {
             }
         }
     });
-
+ 
     ipcMain.on('close', () => {
         console.log('Main: Received close event');
         if (mainWindow) {
