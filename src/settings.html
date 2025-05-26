@@ -6,31 +6,85 @@
     <title>Settings - Spotify Downloader</title>
     <link rel="stylesheet" href="styles.css">
     <style>
+        body {
+            overflow: hidden; /* Prevent body scroll if content overflows window */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #121212; /* Match overall app background */
+        }
+
         .settings-container {
-            max-width: 500px;
+            width: 600px;
+            height: 500px;
             margin: 32px auto 0;
             padding: 2rem;
+            position: relative;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Hide overflowing content */
+            box-sizing: border-box;
+        }
+
+        .settings-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden; /* Ensure sections don't overflow this container */
+            padding-bottom: 20px; /* Add padding to prevent content being hidden by navigation */
+            box-sizing: border-box;
         }
 
         .settings-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0s linear 0.3s; /* Hide instantly after fade */
+            overflow-y: auto;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-section.active {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0s linear 0s; /* Show instantly before fade */
         }
 
         .settings-section h2 {
-            margin-bottom: 1rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
             color: #ffffff;
             font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
         }
 
         .settings-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 0 1rem;
+            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 40px;
+            gap: 10px; /* Ensure gap is applied */
         }
 
         .settings-row:last-child {
@@ -40,11 +94,26 @@
         .settings-label {
             color: #ffffff;
             font-size: 1rem;
+            flex: 1 1 180px; /* Allow shrinking, basis 180px */
+            padding-right: 20px;
+            box-sizing: border-box;
+            min-width: 150px;
+            display: flex;
+            align-items: center;
+        }
+
+        .settings-control {
+            flex: 0 1 300px; /* Allow shrinking, basis 300px */
+            min-width: 150px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .back-btn {
             position: absolute;
-            top: 40px;
+            top: 20px;
             left: 20px;
             background: transparent;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -53,10 +122,178 @@
             border-radius: 6px;
             font-size: 0.9rem;
             transition: all 0.3s ease;
+            z-index: 10;
         }
 
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .page-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px 0; /* Adjusted padding */
+            margin-top: auto;
+            height: 40px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .nav-arrow {
+            background: transparent;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            filter: brightness(0) invert(1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-arrow:hover {
+            transform: scale(1.1);
+        }
+
+        .nav-arrow img {
+            width: 24px;
+            height: 24px;
+            display: block;
+        }
+
+        .page-dots {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            position: relative;
+            height: 12px;
+        }
+
+        .page-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 0;
+            cursor: pointer;
+            position: relative;
+            display: block;
+            box-sizing: border-box;
+            transition: transform 0.2s ease;
+        }
+
+        .page-dot:hover {
+            transform: scale(1.2);
+        }
+
+        /* Hide the default filled dot image */
+        .page-dot img {
+            display: none;
+        }
+
+        .animated-dot {
+            position: absolute;
+            top: 0;
+            left: 0; /* Will be set by JavaScript */
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ffffff; /* Filled color */
+            transition: left 0.3s ease; /* Animation for movement */
+            pointer-events: none;
+            z-index: 5; /* Ensure it's above the outline dots */
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        /* Video Settings Specific Styles */
+        .format-switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 10px;
+        }
+
+        .format-switch-container span {
+            color: #ffffff;
+            font-size: 0.9rem;
+            flex: 1;
+            text-align: center;
+            min-width: 60px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #1DB954;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .open-folder-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+
+        .open-folder-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.3);
         }
     </style>
@@ -78,29 +315,69 @@
     <div class="settings-container">
         <h1>Settings</h1>
         
-        <div class="settings-section">
-            <h2>Download Settings</h2>
-            <div class="settings-row">
-                <span class="settings-label">Download Location</span>
-                <div class="settings-control">
-                    <button id="changeFolderBtn" class="open-folder-btn">Change Folder</button>
+        <div class="settings-content">
+            <!-- Download Settings Page -->
+            <div class="settings-section active" id="download-settings">
+                <h2>Download Settings</h2>
+                <div class="settings-row">
+                    <span class="settings-label">Download Location</span>
+                    <div class="settings-control">
+                        <button id="changeFolderBtn" class="open-folder-btn">Change Folder</button>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Open Downloads Folder</span>
+                    <div class="settings-control">
+                        <button id="openFolderBtn" class="open-folder-btn">Open Folder</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Settings Page -->
+            <div class="settings-section" id="video-settings">
+                <h2>Video Settings</h2>
+                <div class="settings-row">
+                    <span class="settings-label">Default Video Type</span>
+                    <div class="settings-control">
+                        <div class="format-switch-container">
+                            <span>Music Video</span>
+                            <label class="switch">
+                                <input type="checkbox" id="defaultVideoType" checked aria-label="Toggle between music video and lyrics video">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Lyrics Video</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Download Format</span>
+                    <div class="settings-control">
+                        <div class="format-switch-container">
+                            <span>MP3</span>
+                            <label class="switch">
+                                <input type="checkbox" id="formatToggle" checked aria-label="Toggle between MP3 and MP4 format">
+                                <span class="slider"></span>
+                            </label>
+                            <span>MP4</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="settings-section">
-            <h2>Video Settings</h2>
-            <div class="settings-row">
-                <span class="settings-label">Default Video Type</span>
-                <div class="settings-control format-switch-container">
-                    <span>Music Video</span>
-                    <label class="switch">
-                        <input type="checkbox" id="defaultVideoType" checked aria-label="Toggle between music video and lyrics video">
-                        <span class="slider round"></span>
-                    </label>
-                    <span>Lyrics Video</span>
-                </div>
+        <!-- Page Navigation -->
+        <div class="page-navigation">
+            <button class="nav-arrow" id="prevPage">
+                <img src="../img-src/pages/left.png" alt="Previous">
+            </button>
+            <div class="page-dots">
+                <button class="page-dot" data-page="download-settings" aria-label="Go to Download Settings"></button>
+                <button class="page-dot" data-page="video-settings" aria-label="Go to Video Settings"></button>
+                 <div class="animated-dot"></div> <!-- Animated dot element -->
             </div>
+            <button class="nav-arrow" id="nextPage">
+                <img src="../img-src/pages/right.png" alt="Next">
+            </button>
         </div>
     </div>
 

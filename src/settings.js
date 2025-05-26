@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const minBtn = document.getElementById('min-btn');
     const maxBtn = document.getElementById('max-btn');
     const closeBtn = document.getElementById('close-btn');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageDots = document.querySelectorAll('.page-dot');
+    const settingsSections = document.querySelectorAll('.settings-section');
+
+    let currentPageIndex = 0;
+    const totalPages = settingsSections.length;
+    let isTransitioning = false;
 
     // Load saved settings
     loadSettings();
@@ -53,6 +61,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Page navigation functions
+    function updatePageDisplay() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        // Update sections
+        settingsSections.forEach((section, index) => {
+            if (index === currentPageIndex) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+        });
+
+        // Update dots with animation
+        pageDots.forEach((dot, index) => {
+            const img = dot.querySelector('img');
+            if (index === currentPageIndex) {
+                img.src = '../img-src/pages/filled-in.png';
+                dot.classList.add('active');
+            } else {
+                img.src = '../img-src/pages/not-filled-in.png';
+                dot.classList.remove('active');
+            }
+        });
+
+        // Update arrow button states
+        prevPageBtn.style.opacity = currentPageIndex === 0 ? '0.5' : '1';
+        nextPageBtn.style.opacity = currentPageIndex === totalPages - 1 ? '0.5' : '1';
+
+        // Reset transition flag after animation completes
+        setTimeout(() => {
+            isTransitioning = false;
+        }, 300);
+    }
+
+    // Previous page button handler
+    prevPageBtn.addEventListener('click', () => {
+        if (currentPageIndex > 0 && !isTransitioning) {
+            currentPageIndex--;
+            updatePageDisplay();
+        }
+    });
+
+    // Next page button handler
+    nextPageBtn.addEventListener('click', () => {
+        if (currentPageIndex < totalPages - 1 && !isTransitioning) {
+            currentPageIndex++;
+            updatePageDisplay();
+        }
+    });
+
+    // Page dot click handlers
+    pageDots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            if (currentPageIndex !== index && !isTransitioning) {
+                currentPageIndex = index;
+                updatePageDisplay();
+            }
+        });
+    });
+
     // Load saved settings
     async function loadSettings() {
         try {
@@ -64,4 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error loading settings:', error);
         }
     }
+
+    // Initialize page display
+    updatePageDisplay();
 }); 

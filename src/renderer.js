@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const minBtn = document.getElementById('min-btn');
   const maxBtn = document.getElementById('max-btn');
   const closeBtn = document.getElementById('close-btn');
-  const formatToggle = document.getElementById('formatToggle');
   const changeLocationBtn = document.getElementById('changeLocationBtn');
   const openFolderBtn = document.getElementById('openFolderBtn');
   const locationText = document.getElementById('locationText');
@@ -72,13 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
       closeBtn.addEventListener('click', () => {
           window.electronAPI.close();
       });
-  }
-
-  if (formatToggle) {
-    formatToggle.addEventListener('change', (e) => {
-      const format = e.target.checked ? 'MP4' : 'MP3';
-      console.log(`Format changed to: ${format}`);
-    });
   }
 
   // Load default video type setting
