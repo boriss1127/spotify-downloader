@@ -30,7 +30,8 @@ jobs:
 
       - name: Download yt-dlp (Windows)
         if: runner.os == 'Windows'
-        run: Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile yt-dlp.exe
+        run: |
+          Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile yt-dlp.exe
 
       - name: Download yt-dlp (macOS)
         if: runner.os == 'macOS'
@@ -38,29 +39,24 @@ jobs:
           curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp
           chmod +x yt-dlp
 
-      - name: Build/Release Electron app
+      - name: Build and release Electron app
         uses: mauron85/action-electron-builder@1.0.2
         with:
-          github_token: ${{ secrets.github_token }}
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          mac_certs: ${{ secrets.mac_certs }}
-          mac_certs_password: ${{ secrets.mac_certs_password }}
-          windows_signing: ${{ secrets.windows_signing }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload macOS DMG and PKG Artifacts
+      - name: Upload macOS DMG Artifact
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v3
         with:
           name: spotify-downloader-macos
-          path: |
-            dist/*.dmg
-            dist/*.pkg
+          path: dist/*.dmg
 
       - name: Upload Windows Executable Artifact
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
         with:
-          name: spotify-downloader-windows-nsis
+          name: spotify-downloader-windows
           path: dist/*.exe
