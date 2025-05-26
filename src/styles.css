@@ -277,6 +277,7 @@ h1 {
   height: 0;
 }
 
+
 .slider {
   position: absolute;
   cursor: pointer;
@@ -496,4 +497,265 @@ h2 {
 
 .open-folder-btn:active {
   transform: translateY(0);
+}
+
+.location-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.location-text {
+    color: #ffffff;
+    font-size: 0.9rem;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Settings Page Styles */
+.settings-container {
+    max-width: 500px;
+    margin: 32px auto 0;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+    background: #121212;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(29, 185, 84, 0.15),
+                0 0 60px rgba(29, 185, 84, 0.1),
+                0 0 90px rgba(29, 185, 84, 0.05);
+    animation: settingsContainerAppear 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transform-origin: center;
+}
+
+@keyframes settingsContainerAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+        box-shadow: 0 0 0 rgba(29, 185, 84, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        box-shadow: 0 0 30px rgba(29, 185, 84, 0.15),
+                    0 0 60px rgba(29, 185, 84, 0.1),
+                    0 0 90px rgba(29, 185, 84, 0.05);
+    }
+}
+
+.settings-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: settingsSectionAppear 0.5s cubic-bezier(0.4, 0.2, 0.2, 1) forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.settings-section:nth-child(1) { animation-delay: 0.2s; }
+.settings-section:nth-child(2) { animation-delay: 0.4s; }
+
+@keyframes settingsSectionAppear {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.settings-row:last-child {
+    margin-bottom: 0;
+}
+
+.settings-label {
+    color: #ffffff;
+    font-size: 1rem;
+    flex-grow: 1;
+    margin-right: 10px; /* Add some space between label and control */
+}
+
+.settings-control {
+    /* Allows button/switch to control its own alignment if needed */
+    flex-shrink: 0;
+}
+
+.format-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Space between labels and switch */
+}
+
+.format-switch-container span {
+     color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.settings-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 12px;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    animation: settingsBtnAppear 0.5s cubic-bezier(0.4, 0.2, 0.2, 1) 0.6s forwards;
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+@keyframes settingsBtnAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.settings-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px) scale(1.05);
+}
+
+.settings-btn:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.settings-btn img {
+    filter: invert(1);
+    transition: transform 0.3s ease;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.settings-btn:hover img {
+    transform: rotate(30deg) scale(1.1);
+}
+
+.back-btn {
+    position: absolute;
+    top: 40px;
+    left: 20px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    animation: backBtnAppear 0.5s cubic-bezier(0.4, 0.2, 0.2, 1) 0.3s forwards;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+@keyframes backBtnAppear {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(5px);
+}
+
+/* Update .open-folder-btn for the main page */
+.container .open-folder-btn {
+    display: block; /* Make it a block element */
+    margin: 20px auto; /* Center and add vertical space */
+    background: rgba(255, 255, 255, 0.05); /* Slightly visible background */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+    color: #ffffff;
+    padding: 12px 24px; /* More padding */
+    border-radius: 8px; /* Rounded corners */
+    font-size: 1rem; /* Standard font size */
+    font-weight: 600; /* Bold text */
+    transition: all 0.3s ease;
+    width: auto; /* Auto width */
+    text-align: center; /* Center text */
+}
+
+.container .open-folder-btn:hover {
+  background: rgba(255, 255, 255, 0.1); /* Lighter hover background */
+  border-color: rgba(255, 255, 255, 0.3); /* Lighter hover border */
+  transform: translateY(-2px);
+}
+
+.container .open-folder-btn:active {
+  transform: translateY(0);
+}
+
+.container .settings-btn {
+    position: static; /* Remove fixed positioning */
+    display: block; /* Make it a block element */
+    margin: 10px auto 0; /* Center below the folder button, add space */
+    padding: 10px;
+    width: 40px; /* Adjust size */
+    height: 40px; /* Adjust size */
+    border-radius: 50%; /* Keep it circular */
+    background: transparent; /* Transparent background */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Border */
+}
+
+.container .settings-btn:hover {
+    background: rgba(255, 255, 255, 0.1); /* Hover background */
+    border-color: rgba(255, 255, 255, 0.3); /* Hover border */
+    transform: scale(1.05); /* Scale up slightly on hover */
+}
+
+.container .settings-btn:active {
+    transform: scale(0.95); /* Scale down slightly on active */
+}
+
+.container .settings-btn img {
+    filter: invert(1); /* Keep icon white */
+    transition: transform 0.3s ease;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.container .settings-btn:hover img {
+    transform: rotate(30deg) scale(1.1);
 }

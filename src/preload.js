@@ -41,6 +41,18 @@ contextBridge.exposeInMainWorld(
             console.log('Preload: Sending createPlaylistZip event');
             return ipcRenderer.invoke('create-playlist-zip', folderName, zipName);
         },
+        getSettings: () => {
+            console.log('Preload: Sending getSettings event');
+            return ipcRenderer.invoke('get-settings');
+        },
+        saveSettings: (settings) => {
+            console.log('Preload: Sending saveSettings event');
+            return ipcRenderer.invoke('save-settings', settings);
+        },
+        selectDownloadFolder: () => {
+            console.log('Preload: Sending selectDownloadFolder event');
+            return ipcRenderer.invoke('select-download-folder');
+        },
         openFolder: () => {
             console.log('Preload: Sending openFolder event');
             return ipcRenderer.invoke('open-folder');
@@ -49,3 +61,4 @@ contextBridge.exposeInMainWorld(
 );
 
 console.log('Preload script completed');
+ 

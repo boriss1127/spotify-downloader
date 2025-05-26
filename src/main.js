@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
 const remoteMain = require('@electron/remote/main');
 const { execFile } = require('child_process');
@@ -7,6 +7,12 @@ const fs = require('fs');
 const { shell } = require('electron');
 const fetch = require('node-fetch');
 const archiver = require('archiver');
+
+// Initialize downloads directory
+let downloadsDir = path.join(app.getPath('downloads'), 'Spotify Downloads');
+if (!fs.existsSync(downloadsDir)) {
+    fs.mkdirSync(downloadsDir, { recursive: true });
+}
 
 // Debug logging for .env loading
 console.log('Current directory:', __dirname);
@@ -47,12 +53,6 @@ console.log('Environment variables loaded:', {
 remoteMain.initialize();
 
 let mainWindow;
-
-// Create downloads directory if it doesn't exist
-const downloadsDir = path.join(app.getPath('downloads'), 'Spotify Downloads');
-if (!fs.existsSync(downloadsDir)) {
-    fs.mkdirSync(downloadsDir, { recursive: true });
-}
 
 // Spotify API credentials from .env file
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
@@ -516,6 +516,74 @@ ipcMain.handle('open-folder', async () => {
         throw error;
     }
 });
+
+// Settings file path
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+
+// Load settings from file
+function loadSettings() {
+    try {
+        if (fs.existsSync(settingsPath)) {
+            const data = fs.readFileSync(settingsPath, 'utf8');
+            const settings = JSON.parse(data);
+            if (settings.downloadFolder) {
+                downloadsDir = settings.downloadFolder;
+            }
+            return settings;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+    return {
+        defaultVideoType: 'music',
+        downloadFolder: downloadsDir
+    };
+}
+
+// Save settings to file
+function saveSettings(settings) {
+    try {
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        return false;
+    }
+}
+
+// Add settings IPC handlers
+ipcMain.handle('get-settings', () => {
+    return loadSettings();
+});
+
+ipcMain.handle('save-settings', (event, settings) => {
+    const currentSettings = loadSettings();
+    const newSettings = { ...currentSettings, ...settings };
+    if (newSettings.downloadFolder) {
+        downloadsDir = newSettings.downloadFolder;
+    }
+    return saveSettings(newSettings);
+});
+
+ipcMain.handle('select-download-folder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory']
+    });
+
+    if (!result.canceled && result.filePaths.length > 0) {
+        const folderPath = result.filePaths[0];
+        const settings = loadSettings();
+        settings.downloadFolder = folderPath;
+        saveSettings(settings);
+        downloadsDir = folderPath;
+        return { success: true, folderPath };
+    }
+
+    return { success: false };
+});
+
+// Initialize settings
+loadSettings();
 
 // App ready
 app.whenReady().then(createWindow);

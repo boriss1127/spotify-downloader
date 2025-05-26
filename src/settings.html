@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Spotify Downloader</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .settings-container {
+            max-width: 500px;
+            margin: 32px auto 0;
+            padding: 2rem;
+        }
+
+        .settings-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-section h2 {
+            margin-bottom: 1rem;
+            color: #ffffff;
+            font-size: 1.2rem;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .settings-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-label {
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="glow"></div>
+
+    <div class="title-bar">
+        <div class="title">Settings - Spotify Downloader</div>
+        <div class="window-controls">
+            <button id="min-btn"><img src="../img-src/title-bar/minus.png" alt="-" width="20" height="20"></button>
+            <button id="max-btn"><img src="../img-src/title-bar/sqr.png" alt="sqr" width="15" height="15"></button>
+            <button id="close-btn"><img src="../img-src/title-bar/cross.png" alt="x" width="20" height="20"></button>
+        </div>
+    </div>
+
+    <button class="back-btn" id="backBtn">← Back</button>
+
+    <div class="settings-container">
+        <h1>Settings</h1>
+        
+        <div class="settings-section">
+            <h2>Download Settings</h2>
+            <div class="settings-row">
+                <span class="settings-label">Download Location</span>
+                <div class="settings-control">
+                    <button id="changeFolderBtn" class="open-folder-btn">Change Folder</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>Video Settings</h2>
+            <div class="settings-row">
+                <span class="settings-label">Default Video Type</span>
+                <div class="settings-control format-switch-container">
+                    <span>Music Video</span>
+                    <label class="switch">
+                        <input type="checkbox" id="defaultVideoType" checked aria-label="Toggle between music video and lyrics video">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>Lyrics Video</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html> 

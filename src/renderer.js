@@ -12,18 +12,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const spotifyLink = document.getElementById('spotifyLink');
   const progress = document.getElementById('progress');
   const status = document.getElementById('status');
-  const openFolderBtn = document.getElementById('openFolderBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
   const minBtn = document.getElementById('min-btn');
   const maxBtn = document.getElementById('max-btn');
   const closeBtn = document.getElementById('close-btn');
   const formatToggle = document.getElementById('formatToggle');
+  const changeLocationBtn = document.getElementById('changeLocationBtn');
+  const openFolderBtn = document.getElementById('openFolderBtn');
+  const locationText = document.getElementById('locationText');
 
   const { 
     getData: preloadGetData, 
     getTracks: preloadGetTracks, 
     ytdlDownload, 
-    ytSearch: preloadYtSearch, 
-    openFolder
+    ytSearch: preloadYtSearch,
+    getSettings
   } = window.electronAPI;
 
   if (downloadBtn) {
@@ -47,10 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (openFolderBtn) {
-    openFolderBtn.onclick = () => {
-      console.log('Opening downloads folder...');
-      openFolder();
+  if (settingsBtn) {
+    settingsBtn.onclick = () => {
+      window.location.href = 'settings.html';
     };
   }
 
@@ -79,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Load default video type setting
+  loadDefaultVideoType();
+
   let suggestionsDropdown;
 
   function createSuggestionsDropdown() {
@@ -103,6 +108,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (suggestionsDropdown) {
       suggestionsDropdown.remove();
       suggestionsDropdown = null;
+    }
+  }
+
+  async function loadDefaultVideoType() {
+    try {
+      const settings = await getSettings();
+      if (settings && settings.defaultVideoType === 'lyrics') {
+        // Update the search query to use lyrics videos by default
+        window.defaultVideoType = 'lyrics';
+      }
+    } catch (error) {
+      console.error('Error loading default video type:', error);
     }
   }
 
@@ -222,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             progress.style.width = `${((i + 1) / tracks.length) * 100}%`;
 
             const searchQuery = format === 'mp3' 
-                ? `${track.name} ${track.artist} lyrics video`
+                ? `${track.name} ${track.artist} ${window.defaultVideoType === 'lyrics' ? 'lyrics video' : 'official music video'}`
                 : `${track.name} ${track.artist} official music video`;
             console.log('YouTube search query:', searchQuery);
             
@@ -300,5 +317,45 @@ document.addEventListener('DOMContentLoaded', () => {
       stream.on('end', () => resolve(Buffer.concat(chunks)));
       stream.on('error', reject);
     });
+  }
+
+  // Load and display current location
+  loadCurrentLocation();
+
+  if (changeLocationBtn) {
+    changeLocationBtn.addEventListener('click', async () => {
+      try {
+        const result = await window.electronAPI.selectDownloadFolder();
+        if (result.success) {
+          await window.electronAPI.saveSettings({
+            downloadFolder: result.folderPath
+          });
+          loadCurrentLocation();
+        }
+      } catch (error) {
+        console.error('Error changing download location:', error);
+      }
+    });
+  }
+
+  if (openFolderBtn) {
+    openFolderBtn.addEventListener('click', async () => {
+      try {
+        await window.electronAPI.openFolder();
+      } catch (error) {
+        console.error('Error opening folder:', error);
+      }
+    });
+  }
+
+  async function loadCurrentLocation() {
+    try {
+      const settings = await window.electronAPI.getSettings();
+      if (settings && settings.downloadFolder) {
+        locationText.textContent = `Export Location: ${settings.downloadFolder}`;
+      }
+    } catch (error) {
+      console.error('Error loading location:', error);
+    }
   }
 });
