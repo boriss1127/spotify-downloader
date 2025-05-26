@@ -220,7 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
             status.textContent = `Searching YouTube for: ${track.name} by ${track.artist}`;
             progress.style.width = `${((i + 1) / tracks.length) * 100}%`;
 
-            const searchQuery = `${track.name} ${track.artist} official music video`;
+            const searchQuery = format === 'mp3' 
+                ? `${track.name} ${track.artist} lyrics video`
+                : `${track.name} ${track.artist} official music video`;
             console.log('YouTube search query:', searchQuery);
             
             const results = await preloadYtSearch(searchQuery);

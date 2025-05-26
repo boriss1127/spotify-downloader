@@ -49,16 +49,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload macOS App Artifact
+      - name: Upload macOS DMG and PKG Artifacts
         if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: spotify-downloader-macos-app
-          path: dist/mac/*
+          name: spotify-downloader-macos
+          path: |
+            dist/*.dmg
+            dist/*.pkg
 
       - name: Upload Windows Executable Artifact
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: spotify-downloader-windows-exe
+          name: spotify-downloader-windows-nsis
           path: dist/*.exe
