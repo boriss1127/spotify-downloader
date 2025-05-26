@@ -25,7 +25,8 @@ body {
     flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
-    animation: settingsContainerAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: settingsContainerAppear 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .settings-container.transitioning {
@@ -35,10 +36,9 @@ body {
 .settings-content {
     flex: 1;
     position: relative;
-    overflow: hidden;
-    padding-bottom: 20px;
+    overflow: hidden; /* Ensure sections don't overflow this container */
+    padding-bottom: 20px; /* Add padding to prevent content being hidden by navigation */
     box-sizing: border-box;
-    perspective: 1000px;
 }
 
 .settings-section {
@@ -54,41 +54,55 @@ body {
     opacity: 0;
     visibility: hidden;
     transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0s linear 0.4s;
     will-change: transform, opacity;
-    backface-visibility: hidden;
 }
 
 .settings-section.active {
     opacity: 1;
     visibility: visible;
     transform: translateX(0);
-    z-index: 1;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0s linear 0s;
 }
 
 .settings-section.slide-out {
     transform: translateX(-100%);
     opacity: 0;
-    z-index: 0;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0s linear 0.4s;
 }
 
 .settings-section.slide-in {
     transform: translateX(100%);
     opacity: 0;
-    z-index: 0;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0s linear 0.4s;
 }
 
 .settings-section.slide-in.active {
     transform: translateX(0);
     opacity: 1;
-    z-index: 1;
+    visibility: visible;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0s linear 0s;
 }
 
 .settings-section.slide-out.active {
     transform: translateX(-100%);
     opacity: 0;
-    z-index: 0;
+    visibility: hidden;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0s linear 0.4s;
 }
 
 .settings-section h2 {
@@ -188,8 +202,6 @@ body {
 }
 
 .nav-arrow {
-    position: relative;
-    z-index: 2;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px;
@@ -228,11 +240,10 @@ body {
 }
 
 .page-dots {
-    position: relative;
-    z-index: 2;
     display: flex;
     gap: 12px;
     align-items: center;
+    position: relative;
 }
 
 .page-dot {
@@ -377,15 +388,15 @@ input:checked + .slider:before {
     border-left: 4px solid #e74c3c;
 }
 
-/* Update the container appear animation */
+/* Add a subtle animation for the settings container */
 @keyframes settingsContainerAppear {
     0% {
         opacity: 0;
-        transform: translateY(10px);
+        transform: scale(0.95) translateY(20px);
     }
     100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
     }
 }
 

@@ -97,55 +97,54 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isTransitioning) return;
         isTransitioning = true;
 
+        // Add transitioning class to container
+        const container = document.querySelector('.settings-container');
+        container.classList.add('transitioning');
+
         // Get all sections
         const sections = document.querySelectorAll('.settings-section');
         const currentSection = sections[currentPageIndex];
         const nextSection = sections[currentPageIndex + (direction === 'next' ? 1 : -1)];
 
-        // Prepare the next section
+        if (currentSection) {
+            currentSection.classList.add(direction === 'next' ? 'slide-out' : 'slide-in');
+        }
+
         if (nextSection) {
-            nextSection.style.visibility = 'visible';
             nextSection.classList.add('active');
             nextSection.classList.add(direction === 'next' ? 'slide-in' : 'slide-out');
         }
 
-        // Start the transition
-        requestAnimationFrame(() => {
-            if (currentSection) {
-                currentSection.classList.add(direction === 'next' ? 'slide-out' : 'slide-in');
+        // Update dots
+        pageDots.forEach((dot, index) => {
+            if (index === currentPageIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
             }
-
-            // Update dots
-            pageDots.forEach((dot, index) => {
-                if (index === currentPageIndex) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
-            });
-
-            // Update animated dot position
-            const dotWidth = 12;
-            const dotGap = 12;
-            const newPosition = currentPageIndex * (dotWidth + dotGap);
-            animatedDot.style.left = `${newPosition}px`;
-
-            // Update arrow button states
-            prevPageBtn.disabled = currentPageIndex === 0;
-            nextPageBtn.disabled = currentPageIndex === totalPages - 1;
         });
 
-        // Reset transition flag after animation completes
+        // Update animated dot position
+        const dotWidth = 12; // Width of the dot
+        const dotGap = 12; // Gap between dots
+        const newPosition = currentPageIndex * (dotWidth + dotGap);
+        animatedDot.style.left = `${newPosition}px`;
+
+        // Update arrow button states
+        prevPageBtn.disabled = currentPageIndex === 0;
+        nextPageBtn.disabled = currentPageIndex === totalPages - 1;
+
+        // Reset transition flag and remove transitioning class after animation completes
         setTimeout(() => {
             isTransitioning = false;
+            container.classList.remove('transitioning');
             if (currentSection) {
                 currentSection.classList.remove('active', 'slide-out', 'slide-in');
-                currentSection.style.visibility = 'hidden';
             }
             if (nextSection) {
                 nextSection.classList.remove('slide-in', 'slide-out');
             }
-        }, 300); // Match the CSS transition duration
+        }, 400); // Match the CSS transition duration
     }
 
     // Previous page button handler
