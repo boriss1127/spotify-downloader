@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Spotify Downloader</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../settings.css">
+</head>
+<body>
+    <div class="glow"></div>
+
+    <div class="title-bar">
+        <div class="title">Settings - Spotify Downloader</div>
+        <div class="window-controls">
+            <button id="min-btn"><img src="../../img-src/title-bar/minus.png" alt="-" width="20" height="20"></button>
+            <button id="max-btn"><img src="../../img-src/title-bar/sqr.png" alt="sqr" width="15" height="15"></button>
+            <button id="close-btn"><img src="../../img-src/title-bar/cross.png" alt="x" width="20" height="20"></button>
+        </div>
+    </div>
+
+    <button class="back-btn" id="backBtn">← Back</button>
+
+    <div class="settings-container">
+        <h1>Settings</h1>
+        
+        <div class="settings-content">
+            <!-- Media Settings Section -->
+            <div class="settings-section active">
+                <h2>Media Settings</h2>
+                <div class="settings-row">
+                    <span class="settings-label">Default Video Type</span>
+                    <div class="settings-control">
+                        <div class="format-switch-container">
+                            <span>Music Video</span>
+                            <label class="switch">
+                                <input type="checkbox" id="defaultVideoType" checked aria-label="Toggle between music video and official audio">
+                                <span class="slider"></span>
+                            </label>
+                            <span>Official Audio</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Download Format</span>
+                    <div class="settings-control">
+                        <div class="format-switch-container">
+                            <span>MP3</span>
+                            <label class="switch">
+                                <input type="checkbox" id="formatToggle" checked aria-label="Toggle between MP3 and MP4 format">
+                                <span class="slider"></span>
+                            </label>
+                            <span>MP4</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Settings Section -->
+            <div class="settings-section">
+                <h2>Download Settings</h2>
+                <div class="settings-row">
+                    <span class="settings-label">Download Location</span>
+                    <div class="settings-control">
+                        <button id="changeFolderBtn" class="open-folder-btn">Change Folder</button>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Open Downloads Folder</span>
+                    <div class="settings-control">
+                        <button id="openFolderBtn" class="open-folder-btn">Open Folder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-navigation">
+            <button class="nav-arrow" id="prevPage" disabled>
+                <img src="../../img-src/pages/left.png" alt="Previous">
+            </button>
+            <div class="page-dots">
+                <button class="page-dot active" data-page="media-settings" aria-label="Go to Media Settings"></button>
+                <button class="page-dot" data-page="download-settings" aria-label="Go to Download Settings"></button>
+                <div class="animated-dot"></div>
+            </div>
+            <button class="nav-arrow" id="nextPage">
+                <img src="../../img-src/pages/right.png" alt="Next">
+            </button>
+        </div>
+    </div>
+
+    <script src="../settings.js"></script>
+</body>
+</html> 

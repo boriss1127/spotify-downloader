@@ -105,7 +105,7 @@ body {
 }
 
 .window-controls button {
-  width: 45px;
+  width: 40px;
   height: 24px;
   background: none;
   border: none;
@@ -115,7 +115,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.4, 0.2, 0.2, 1);
   border-radius: 6px;
   position: relative;
   overflow: hidden;
@@ -133,11 +133,13 @@ body {
 }
 
 .window-controls button:hover {
+  background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
 }
 
 .window-controls button:active {
-  transform: translateY(1px);
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 #close-btn {
@@ -161,10 +163,14 @@ body {
 .window-controls button img {
   filter: invert(1);
   transition: transform 0.2s;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .window-controls button:hover img {
   transform: scale(1.15);
+  filter: invert(1) brightness(1.2);
 }
 
 /* Container Styles */
@@ -684,13 +690,14 @@ h2 {
     filter: invert(1);
     transition: transform 0.3s ease;
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
 }
 
 .settings-btn:hover img {
     transform: rotate(30deg) scale(1.1);
+    filter: invert(1) brightness(1.2);
 }
 
 .back-btn {

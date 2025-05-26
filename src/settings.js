@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const animatedDot = document.querySelector('.animated-dot');
 
     let currentPageIndex = 0;
-    const totalPages = settingsSections.length;
+    const totalPages = 2; // Total number of settings pages
     let isTransitioning = false;
 
     // Load saved settings
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Change folder button handler
-    changeFolderBtn.addEventListener('click', async () => {
+    changeFolderBtn?.addEventListener('click', async () => {
         try {
             const result = await window.electronAPI.selectDownloadFolder();
             if (result.success) {
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Open folder button handler
-    openFolderBtn.addEventListener('click', async () => {
+    openFolderBtn?.addEventListener('click', async () => {
         try {
             await window.electronAPI.openFolder();
         } catch (error) {
@@ -65,10 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Default video type handler
-    defaultVideoType.addEventListener('change', async (e) => {
+    defaultVideoType?.addEventListener('change', async (e) => {
         try {
             await window.electronAPI.saveSettings({
-                defaultVideoType: e.target.checked ? 'lyrics' : 'music'
+                defaultVideoType: e.target.checked ? 'audio' : 'music'
             });
             showToast('Video type preference saved');
         } catch (error) {
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Format toggle handler
-    formatToggle.addEventListener('change', async (e) => {
+    formatToggle?.addEventListener('change', async (e) => {
         try {
             await window.electronAPI.saveSettings({
                 defaultFormat: e.target.checked ? 'mp4' : 'mp3'
@@ -93,49 +93,66 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Page navigation functions
-    function updatePageDisplay() {
+    function updatePageDisplay(direction = 'next') {
         if (isTransitioning) return;
         isTransitioning = true;
 
-        // Update sections
-        settingsSections.forEach((section, index) => {
-            if (index === currentPageIndex) {
-                section.classList.add('active');
-            } else {
-                section.classList.remove('active');
+        // Get all sections
+        const sections = document.querySelectorAll('.settings-section');
+        const currentSection = sections[currentPageIndex];
+        const nextSection = sections[currentPageIndex + (direction === 'next' ? 1 : -1)];
+
+        // Prepare the next section
+        if (nextSection) {
+            nextSection.style.visibility = 'visible';
+            nextSection.classList.add('active');
+            nextSection.classList.add(direction === 'next' ? 'slide-in' : 'slide-out');
+        }
+
+        // Start the transition
+        requestAnimationFrame(() => {
+            if (currentSection) {
+                currentSection.classList.add(direction === 'next' ? 'slide-out' : 'slide-in');
             }
+
+            // Update dots
+            pageDots.forEach((dot, index) => {
+                if (index === currentPageIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+
+            // Update animated dot position
+            const dotWidth = 12;
+            const dotGap = 12;
+            const newPosition = currentPageIndex * (dotWidth + dotGap);
+            animatedDot.style.left = `${newPosition}px`;
+
+            // Update arrow button states
+            prevPageBtn.disabled = currentPageIndex === 0;
+            nextPageBtn.disabled = currentPageIndex === totalPages - 1;
         });
-
-        // Update dots
-        pageDots.forEach((dot, index) => {
-            if (index === currentPageIndex) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
-        });
-
-        // Update animated dot position
-        const dotWidth = 12; // Width of the dot
-        const dotGap = 12; // Gap between dots
-        const newPosition = currentPageIndex * (dotWidth + dotGap);
-        animatedDot.style.left = `${newPosition}px`;
-
-        // Update arrow button states
-        prevPageBtn.disabled = currentPageIndex === 0;
-        nextPageBtn.disabled = currentPageIndex === totalPages - 1;
 
         // Reset transition flag after animation completes
         setTimeout(() => {
             isTransitioning = false;
-        }, 300);
+            if (currentSection) {
+                currentSection.classList.remove('active', 'slide-out', 'slide-in');
+                currentSection.style.visibility = 'hidden';
+            }
+            if (nextSection) {
+                nextSection.classList.remove('slide-in', 'slide-out');
+            }
+        }, 300); // Match the CSS transition duration
     }
 
     // Previous page button handler
     prevPageBtn.addEventListener('click', () => {
         if (currentPageIndex > 0 && !isTransitioning) {
             currentPageIndex--;
-            updatePageDisplay();
+            updatePageDisplay('prev');
         }
     });
 
@@ -143,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     nextPageBtn.addEventListener('click', () => {
         if (currentPageIndex < totalPages - 1 && !isTransitioning) {
             currentPageIndex++;
-            updatePageDisplay();
+            updatePageDisplay('next');
         }
     });
 
@@ -151,8 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
     pageDots.forEach((dot, index) => {
         dot.addEventListener('click', () => {
             if (currentPageIndex !== index && !isTransitioning) {
+                const direction = index > currentPageIndex ? 'next' : 'prev';
                 currentPageIndex = index;
-                updatePageDisplay();
+                updatePageDisplay(direction);
             }
         });
     });
@@ -162,8 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const settings = await window.electronAPI.getSettings();
             if (settings) {
-                defaultVideoType.checked = settings.defaultVideoType === 'lyrics';
-                formatToggle.checked = settings.defaultFormat === 'mp4';
+                if (defaultVideoType) {
+                    defaultVideoType.checked = settings.defaultVideoType === 'audio';
+                }
+                if (formatToggle) {
+                    formatToggle.checked = settings.defaultFormat === 'mp4';
+                }
             }
         } catch (error) {
             console.error('Error loading settings:', error);
@@ -189,5 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize page display
+    const currentPage = window.location.pathname.split('/').pop();
+    currentPageIndex = currentPage === 'video-settings.html' ? 1 : 0;
     updatePageDisplay();
 }); 
